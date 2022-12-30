@@ -16,7 +16,7 @@ class Piece:
             self.partner_locations = [
                 (self.x-PARTNER_DISTANCE, self.y), (self.x+PARTNER_DISTANCE, self.y), (self.x, self.y+PARTNER_DISTANCE), (self.x, self.y-PARTNER_DISTANCE)]
         self.moving = False
-        self.movable = True if movable else False
+        self.movable = movable
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
