@@ -32,7 +32,7 @@ class Piece:
         return True
 
     def snap(self):
-        for solid_piece in solid_pieces:
+        for solid_piece in frozenset(solid_pieces):
             for location in solid_piece.partner_locations:
                 if coordinate_difference((self.x, self.y), location) < SNAP_DISTANCE:
                     self.x, self.y = location
@@ -40,7 +40,7 @@ class Piece:
                     self.movable = False
                     self.partner_locations = [
                     (self.x-PARTNER_DISTANCE, self.y), (self.x+PARTNER_DISTANCE, self.y), (self.x, self.y+PARTNER_DISTANCE), (self.x, self.y-PARTNER_DISTANCE)]
-                    solid_pieces.append(self)
+                    solid_pieces.add(self)
                     try:
                         moving_pieces.remove(self)
                     except ValueError:
@@ -77,7 +77,7 @@ clock = pg.time.Clock()
 FPS = 60
 PARTNER_DISTANCE = 99
 SNAP_DISTANCE = 25
-solid_pieces = [Piece(False)]
+solid_pieces = set([Piece(False)])
 moving_pieces = [Piece(True), Piece(True)]
 hud = pg.font.SysFont("Arial", 18)
 
