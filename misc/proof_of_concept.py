@@ -36,11 +36,12 @@ class Piece:
             for location in solid_piece.partner_locations:
                 if coordinate_difference((self.x, self.y), location) < SNAP_DISTANCE:
                     self.x, self.y = location
-                    self.image = colorize(self.image, (0,255,0))
+                    self.image = colorize(self.image, (0, 255, 0))
                     self.movable = False
                     self.partner_locations = [
-                    (self.x-PARTNER_DISTANCE, self.y), (self.x+PARTNER_DISTANCE, self.y), (self.x, self.y+PARTNER_DISTANCE), (self.x, self.y-PARTNER_DISTANCE)]
+                        (self.x-PARTNER_DISTANCE, self.y), (self.x+PARTNER_DISTANCE, self.y), (self.x, self.y+PARTNER_DISTANCE), (self.x, self.y-PARTNER_DISTANCE)]
                     solid_pieces.add(self)
+                    solid_piece.partner_locations.remove(location)
                     try:
                         moving_pieces.remove(self)
                     except ValueError:
@@ -54,17 +55,20 @@ def draw_screen() -> None:
         solid_piece.draw()
     for moving_piece in moving_pieces:
         moving_piece.draw()
-    screen.blit(hud.render('Press "a" to spawn a new piece', True, pg.Color("coral")), (0,0))
+    screen.blit(hud.render('Press "a" to spawn a new piece',
+                True, pg.Color("coral")), (0, 0))
     pg.display.update()
 
 
 def colorize(image, newColor):
-    image.fill((0,0,0,255), None, pg.BLEND_RGBA_MULT)
+    image.fill((0, 0, 0, 255), None, pg.BLEND_RGBA_MULT)
     image.fill(newColor + (0,), None, pg.BLEND_RGBA_ADD)
     return image
 
-def coordinate_difference(a,b):
+
+def coordinate_difference(a, b):
     return (abs(a[0]-b[0])+abs(a[1]-b[1]))
+
 
 SCREEN_X: int = round(1920 * 0.5)
 SCREEN_Y: int = round(1080 * 0.5)
@@ -86,18 +90,22 @@ while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
+
         elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
             for moving_piece in moving_pieces:
                 if moving_piece.get_rect().collidepoint(event.pos):
                     moving_piece.moving = True
+
         elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
             for moving_piece in moving_pieces:
                 if moving_piece.moving:
                     moving_piece.moving = False
                     moving_piece.snap()
+
         elif event.type == pg.MOUSEMOTION:
             for moving_piece in moving_pieces:
                 moving_piece.motion(event)
+
         elif event.type == pg.KEYDOWN and event.key == pg.K_a:
             moving_pieces.append(Piece(True))
 
