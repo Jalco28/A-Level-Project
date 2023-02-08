@@ -8,7 +8,7 @@ class Piece:
         if movable:
             self.x = random.randint((SCREEN_X/2)-100, (SCREEN_X/2)+100)
             self.y = random.randint((SCREEN_Y/2)-100, (SCREEN_Y/2)+100)
-            self.image = colorize(pg.image.load('puzzle.png'), (255, 0, 0))
+            self.image = colourise(pg.image.load('puzzle.png'), (255, 0, 0))
         else:
             self.x = SCREEN_X / 4
             self.y = SCREEN_Y / 4
@@ -36,7 +36,7 @@ class Piece:
             for location in solid_piece.partner_locations:
                 if coordinate_difference((self.x, self.y), location) < SNAP_DISTANCE:
                     self.x, self.y = location
-                    self.image = colorize(self.image, (0, 255, 0))
+                    self.image = colourise(self.image, (0, 255, 0))
                     self.movable = False
                     self.partner_locations = [
                         (self.x-PARTNER_DISTANCE, self.y), (self.x+PARTNER_DISTANCE, self.y), (self.x, self.y+PARTNER_DISTANCE), (self.x, self.y-PARTNER_DISTANCE)]
@@ -60,9 +60,9 @@ def draw_screen() -> None:
     pg.display.update()
 
 
-def colorize(image, newColor):
+def colourise(image, new_colour):
     image.fill((0, 0, 0, 255), None, pg.BLEND_RGBA_MULT)
-    image.fill(newColor + (0,), None, pg.BLEND_RGBA_ADD)
+    image.fill(new_colour + (0,), None, pg.BLEND_RGBA_ADD)
     return image
 
 
