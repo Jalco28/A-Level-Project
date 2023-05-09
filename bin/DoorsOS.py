@@ -1,26 +1,8 @@
 import random
 import pygame
 import time
-
-SCREEN_WIDTH, SCREEN_HEIGHT = 1920*0.9, 1080*0.9
-TASK_PRIORITIES = {
-    'Register Mouse Inputs': 5,
-    'Memory Management': 3,
-    'Defrag Disk': 2,
-    'Select Drivers': 6,
-    'User Authentication': 7,
-    'File Access Control': 5,
-    'Data encryption': 6,
-    'Data compression': 4,
-    'MALWARE THREAT': 100
-}
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-GREY = (193, 199, 198)
-FRUSTRATION_RED = (240, 29, 29)
-DEBUG_GREEN = (48, 194, 0)
-DEBUG_BLUE = (5, 148, 237)
-DEBUG = False
+import minigames
+from constants import *
 
 
 class InfoBar:
@@ -30,7 +12,8 @@ class InfoBar:
         self.border_colour = BLACK
         self.FONT_SIZE = 40
         self.font = pygame.font.SysFont("Arial", self.FONT_SIZE)
-        self.start_time = int(time.time())
+        self.start_time = time.time()
+        self.paused_intervals: list[tuple[float, float]] = []
 
         self.mode = 'Regular Play'
         self.score = 0
@@ -67,19 +50,14 @@ class InfoBar:
         screen.blit(difficulty_text, difficulty_rect)
 
     def update(self):
-        self.score = int(time.time()) - self.start_time
+        time_paused = self.get_time_paused()
+        self.score = int(time.time() - time_paused - self.start_time)
 
-
-class MiniGame:
-    def __init__(self):
-        self.rect = pygame.Rect(5, SCREEN_HEIGHT*0.13,
-                                SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85)
-
-    def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, BLACK, self.rect)
-
-    def update(self):
-        pass
+    def get_time_paused(self):
+        time_paused = 0
+        for pair in self.paused_intervals:
+            time_paused += pair[1] - pair[0]
+        return time_paused
 
 
 class FrustrationBar:
@@ -156,7 +134,7 @@ class Task:
             'Data compression',
             'MALWARE THREAT'
         ])
-        self.time_required = random.randint(1, 10)
+        self.time_required = random.randint(1, TASK_PRIORITIES[self.description])
 
         self.description_text = self.description_font.render(
             self.description, True, BLACK)
@@ -222,7 +200,7 @@ class DoorsOS:
         self.info_bar = InfoBar()
         self.task_list = TaskList()
         self.frustration_bar = FrustrationBar()
-        self.current_mini_game = MiniGame()
+        self.current_mini_game = minigames.MiniGame()
 
         self.panels = [self.info_bar,
                        self.current_mini_game, self.frustration_bar, self.task_list]
