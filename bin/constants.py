@@ -7,8 +7,7 @@ TASK_PRIORITIES = {
     'User Authentication': 7,
     'File Access Control': 5,
     'Data encryption': 6,
-    'Data compression': 4,
-    'MALWARE THREAT': 100
+    'Data compression': 4
 }
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)

@@ -131,10 +131,10 @@ class Task:
             'User Authentication',
             'File Access Control',
             'Data encryption',
-            'Data compression',
-            'MALWARE THREAT'
+            'Data compression'
         ])
-        self.time_required = random.randint(1, TASK_PRIORITIES[self.description])
+        self.time_required = random.randint(
+            1, TASK_PRIORITIES[self.description])
 
         self.description_text = self.description_font.render(
             self.description, True, BLACK)
@@ -145,7 +145,7 @@ class Task:
         self.time_text = self.sub_font.render(
             f'Time required: {self.time_required}', True, BLACK)
         self.play_button = Button(
-            'Play mini-game', self.rect.right-180, self.rect.bottom-60, BLACK, GREY)
+            'Play mini-game', self.rect.right-180, self.rect.bottom-60, BLACK, GREY, 25)
 
     def draw(self, screen: pygame.Surface):
         if self.index % 2 == 0:
@@ -167,8 +167,8 @@ class Task:
 
 
 class Button:
-    def __init__(self, text, left, top, border_colour, background_colour):
-        self.font = pygame.font.SysFont('Arial', 25)
+    def __init__(self, text, left, top, border_colour, background_colour, font_size):
+        self.font = pygame.font.SysFont('Arial', font_size)
         self.text = text
         self.rendered_text = self.font.render(self.text, True, BLACK)
         self.rect = pygame.Rect(
@@ -183,6 +183,15 @@ class Button:
         pygame.draw.rect(screen, self.background_colour, self.rect)
         pygame.draw.rect(screen, self.border_colour, self.rect, 2)
         screen.blit(self.rendered_text, self.text_rect)
+
+    @classmethod
+    def from_centre_coords(cls, text, centre_x, centre_y, border_colour, background_colour, font_size):
+        font = pygame.font.SysFont('Arial', font_size)
+        rendered_text = font.render(text, True, BLACK)
+        rect = pygame.Rect(0, 0, rendered_text.get_width(),
+                           rendered_text.get_height())
+        rect.center = (centre_x, centre_y)
+        return cls(text, rect.left, rect.top, border_colour, background_colour, font_size)
 
 
 class DoorsOS:
@@ -202,21 +211,42 @@ class DoorsOS:
         self.frustration_bar = FrustrationBar()
         self.current_mini_game = minigames.MiniGame()
 
-        self.panels = [self.info_bar,
-                       self.current_mini_game, self.frustration_bar, self.task_list]
+        self.resume_button = Button.from_centre_coords(
+            'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50)
+        self.main_menu_button = Button.from_centre_coords(
+            'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50)
+
+        self.panels: list[InfoBar | FrustrationBar | TaskList | minigames.MiniGame] = [self.info_bar,
+                                                                                       self.current_mini_game, self.frustration_bar, self.task_list]
 
     def play_game(self):
         while self.running:
             for event in pygame.event.get():
+
                 if event.type == pygame.QUIT:
                     self.running = False
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.info_bar.difficulty_level += 1
                     if event.button == 3:
                         self.task_list.add_task()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        escape_exit_code = self.pause()
+                        if escape_exit_code == pygame.QUIT:
+                            self.running = False
+                        else:
+                            self.info_bar.paused_intervals.append(
+                                escape_exit_code)
+
                 if event.type == pygame.MOUSEWHEEL:
                     self.frustration_bar.frustration_level += event.y
+
+            if not self.running:
+                break
+
             pygame.display.set_caption(
                 f'DoorsOS {round(self.clock.get_fps())}fps')
             self.update_panels()
@@ -247,6 +277,28 @@ class DoorsOS:
             for i in range(1, 10):
                 pygame.draw.line(self.screen, DEBUG_GREEN, (0, SCREEN_HEIGHT *
                                  i*0.1), (SCREEN_WIDTH, SCREEN_HEIGHT*i*0.1), 3)
+        pygame.display.update()
+
+    def pause(self):
+        paused = True
+        start_time = time.time()
+
+        while paused:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return pygame.QUIT
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        paused = False
+
+            self.draw_pause_screen()
+        return (start_time, time.time())
+
+    def draw_pause_screen(self):
+        self.screen.fill(WHITE)
+        self.info_bar.draw(self.screen)
+        self.resume_button.draw(self.screen)
+        self.main_menu_button.draw(self.screen)
         pygame.display.update()
 
 
