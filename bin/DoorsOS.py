@@ -193,6 +193,9 @@ class Button:
         rect.center = (centre_x, centre_y)
         return cls(text, rect.left, rect.top, border_colour, background_colour, font_size)
 
+    def update(self):
+        pass
+
 
 class DoorsOS:
     def __init__(self):
@@ -204,7 +207,6 @@ class DoorsOS:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
 
-        self.FPS = 60
         self.running = True
         self.info_bar = InfoBar()
         self.task_list = TaskList()
@@ -216,8 +218,9 @@ class DoorsOS:
         self.main_menu_button = Button.from_centre_coords(
             'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50)
 
-        self.panels: list[InfoBar | FrustrationBar | TaskList | minigames.MiniGame] = [self.info_bar,
-                                                                                       self.current_mini_game, self.frustration_bar, self.task_list]
+        self.active_panels: list[InfoBar | FrustrationBar
+                                 | TaskList | minigames.MiniGame | Button] = [self.info_bar,
+                                                                              self.current_mini_game, self.frustration_bar, self.task_list]
 
     def play_game(self):
         while self.running:
@@ -251,15 +254,15 @@ class DoorsOS:
                 f'DoorsOS {round(self.clock.get_fps())}fps')
             self.update_panels()
             self.update_screen()
-            self.clock.tick(self.FPS)
+            self.clock.tick(FPS)
 
     def update_panels(self):
-        for panel in self.panels:
+        for panel in self.active_panels:
             panel.update()
 
     def update_screen(self):
         self.screen.fill(WHITE)
-        for panel in self.panels:
+        for panel in self.active_panels:
             panel.draw(self.screen)
 
         if DEBUG:
@@ -282,7 +285,8 @@ class DoorsOS:
     def pause(self):
         paused = True
         start_time = time.time()
-
+        self.active_panels = [self.info_bar,
+                              self.resume_button, self.main_menu_button]
         while paused:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -291,17 +295,21 @@ class DoorsOS:
                     if event.key == pygame.K_ESCAPE:
                         paused = False
 
-            self.draw_pause_screen()
+            # self.update_panels()
+            pygame.display.set_caption(
+                f'DoorsOS {round(self.clock.get_fps())}fps')
+            self.update_screen()
+            self.clock.tick(FPS)
+
+        self.active_panels = [
+            self.info_bar, self.current_mini_game, self.frustration_bar, self.task_list]
         return (start_time, time.time())
 
-    def draw_pause_screen(self):
-        self.screen.fill(WHITE)
-        self.info_bar.draw(self.screen)
-        self.resume_button.draw(self.screen)
-        self.main_menu_button.draw(self.screen)
-        pygame.display.update()
-
-
+    def send_click_to_panel(self, event:pygame.event.Event):
+        x,y = event.pos
+        for panel in self.active_panels:
+            if panel.rect.collidepoint(x,y):
+                panel.click(x,y)    #Actually write this
 def main():
     game = DoorsOS()
     game.play_game()
