@@ -273,7 +273,7 @@ class DoorsOS:
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        escape_exit_code = self.pause()
+                        escape_exit_code = self.pause_game()
                         if escape_exit_code == pygame.QUIT:
                             self.running = False
                         else:
@@ -301,24 +301,9 @@ class DoorsOS:
         for panel in self.active_panels:
             panel.draw(self.screen)
 
-        if DEBUG:
-            for i in range(10):
-                i += 0.5
-                pygame.draw.line(self.screen, DEBUG_BLUE, (SCREEN_WIDTH *
-                                 i*0.1, 0), (SCREEN_WIDTH*i*0.1, SCREEN_HEIGHT))
-            for i in range(1, 10):
-                pygame.draw.line(self.screen, DEBUG_GREEN, (SCREEN_WIDTH *
-                                 i*0.1, 0), (SCREEN_WIDTH*i*0.1, SCREEN_HEIGHT), 3)
-            for i in range(10):
-                i += 0.5
-                pygame.draw.line(self.screen, DEBUG_BLUE, (0, SCREEN_HEIGHT *
-                                 i*0.1), (SCREEN_WIDTH, SCREEN_HEIGHT*i*0.1))
-            for i in range(1, 10):
-                pygame.draw.line(self.screen, DEBUG_GREEN, (0, SCREEN_HEIGHT *
-                                 i*0.1), (SCREEN_WIDTH, SCREEN_HEIGHT*i*0.1), 3)
         pygame.display.update()
 
-    def pause(self):
+    def pause_game(self):
         self.paused = True
         start_time = time.time()
         self.active_panels = [self.info_bar,

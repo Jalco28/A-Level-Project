@@ -1,6 +1,7 @@
 import pygame
 from constants import *
 
+
 class MiniGame:
     def __init__(self):
         self.rect = pygame.Rect(5, SCREEN_HEIGHT*0.13,
