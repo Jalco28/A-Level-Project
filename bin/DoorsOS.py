@@ -59,6 +59,9 @@ class InfoBar:
             time_paused += pair[1] - pair[0]
         return time_paused
 
+    def click(self, x, y):
+        pass
+
 
 class FrustrationBar:
     def __init__(self):
@@ -94,12 +97,16 @@ class FrustrationBar:
         # self.frustration_level += random.randint(-2, 2)
         self.frustration_level = self.frustration_level % 101
 
+    def click(self, x, y):
+        pass
+
 
 class TaskList:
     def __init__(self):
         self.rect = pygame.Rect(
             SCREEN_WIDTH*0.715, SCREEN_HEIGHT*0.13, SCREEN_WIDTH*0.2, SCREEN_HEIGHT * 0.85+1)
         self.tasks: list[Task] = []
+        self.clicks_to_handle = []
 
     def draw(self, screen: pygame.Surface):
         for task in self.tasks:
@@ -107,11 +114,20 @@ class TaskList:
         pygame.draw.rect(screen, BLACK, self.rect, 5)
 
     def update(self):
-        pass
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            for task in self.tasks:
+                if task.rect.collidepoint(x, y):
+                    task.click(x, y)
+        for task in self.tasks:
+            task.update()
 
     def add_task(self):
         if len(self.tasks) < 8:
             self.tasks.append(Task(len(self.tasks), self))
+
+    def click(self, x, y):
+        self.clicks_to_handle.append((x, y))
 
 
 class Task:
@@ -133,6 +149,8 @@ class Task:
             'Data encryption',
             'Data compression'
         ])
+        self.clicks_to_handle = []
+
         self.time_required = random.randint(
             1, TASK_PRIORITIES[self.description])
 
@@ -145,7 +163,10 @@ class Task:
         self.time_text = self.sub_font.render(
             f'Time required: {self.time_required}', True, BLACK)
         self.play_button = Button(
-            'Play mini-game', self.rect.right-180, self.rect.bottom-60, BLACK, GREY, 25)
+            'Play mini-game', self.rect.right-180, self.rect.bottom-60, BLACK, GREY, 25, self.play_button_action)
+
+    def play_button_action(self):
+        pass
 
     def draw(self, screen: pygame.Surface):
         if self.index % 2 == 0:
@@ -165,9 +186,18 @@ class Task:
         screen.blit(self.time_text, (self.rect.left+10, self.rect.top+70))
         self.play_button.draw(screen)
 
+    def click(self, x, y):
+        self.clicks_to_handle.append((x, y))
+
+    def update(self):
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            if self.play_button.rect.collidepoint(x, y):
+                self.play_button.action()
+
 
 class Button:
-    def __init__(self, text, left, top, border_colour, background_colour, font_size):
+    def __init__(self, text, left, top, border_colour, background_colour, font_size, action):
         self.font = pygame.font.SysFont('Arial', font_size)
         self.text = text
         self.rendered_text = self.font.render(self.text, True, BLACK)
@@ -178,23 +208,27 @@ class Button:
         self.text_rect.center = self.rect.center
         self.border_colour = border_colour
         self.background_colour = background_colour
+        self.action = action
+
+    @classmethod
+    def from_centre_coords(cls, text, centre_x, centre_y, border_colour, background_colour, font_size, action):
+        font = pygame.font.SysFont('Arial', font_size)
+        rendered_text = font.render(text, True, BLACK)
+        rect = pygame.Rect(0, 0, rendered_text.get_width(),
+                           rendered_text.get_height())
+        rect.center = (centre_x, centre_y)
+        return cls(text, rect.left, rect.top, border_colour, background_colour, font_size, action)
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, self.background_colour, self.rect)
         pygame.draw.rect(screen, self.border_colour, self.rect, 2)
         screen.blit(self.rendered_text, self.text_rect)
 
-    @classmethod
-    def from_centre_coords(cls, text, centre_x, centre_y, border_colour, background_colour, font_size):
-        font = pygame.font.SysFont('Arial', font_size)
-        rendered_text = font.render(text, True, BLACK)
-        rect = pygame.Rect(0, 0, rendered_text.get_width(),
-                           rendered_text.get_height())
-        rect.center = (centre_x, centre_y)
-        return cls(text, rect.left, rect.top, border_colour, background_colour, font_size)
-
     def update(self):
         pass
+
+    def click(self, x, y):
+        self.action()
 
 
 class DoorsOS:
@@ -207,6 +241,7 @@ class DoorsOS:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
 
+        self.paused = False
         self.running = True
         self.info_bar = InfoBar()
         self.task_list = TaskList()
@@ -214,9 +249,9 @@ class DoorsOS:
         self.current_mini_game = minigames.MiniGame()
 
         self.resume_button = Button.from_centre_coords(
-            'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50)
+            'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.unpause_game)
         self.main_menu_button = Button.from_centre_coords(
-            'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50)
+            'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, None)
 
         self.active_panels: list[InfoBar | FrustrationBar
                                  | TaskList | minigames.MiniGame | Button] = [self.info_bar,
@@ -231,7 +266,8 @@ class DoorsOS:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
-                        self.info_bar.difficulty_level += 1
+                        # self.info_bar.difficulty_level += 1
+                        self.send_click_to_panel(event)
                     if event.button == 3:
                         self.task_list.add_task()
 
@@ -283,17 +319,20 @@ class DoorsOS:
         pygame.display.update()
 
     def pause(self):
-        paused = True
+        self.paused = True
         start_time = time.time()
         self.active_panels = [self.info_bar,
                               self.resume_button, self.main_menu_button]
-        while paused:
+        while self.paused:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return pygame.QUIT
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        paused = False
+                        self.paused = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.send_click_to_panel(event)
 
             # self.update_panels()
             pygame.display.set_caption(
@@ -305,11 +344,16 @@ class DoorsOS:
             self.info_bar, self.current_mini_game, self.frustration_bar, self.task_list]
         return (start_time, time.time())
 
-    def send_click_to_panel(self, event:pygame.event.Event):
-        x,y = event.pos
+    def send_click_to_panel(self, event: pygame.event.Event):
+        x, y = event.pos
         for panel in self.active_panels:
-            if panel.rect.collidepoint(x,y):
-                panel.click(x,y)    #Actually write this
+            if panel.rect.collidepoint(x, y):
+                panel.click(x, y)
+
+    def unpause_game(self):
+        self.paused = False
+
+
 def main():
     game = DoorsOS()
     game.play_game()
