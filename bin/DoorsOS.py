@@ -231,38 +231,104 @@ class Button:
         self.action()
 
 
-class DoorsOS:
+class MainMenu:
     def __init__(self):
-        self.setup_game()
-
-    def setup_game(self):
         pygame.init()
         pygame.display.set_caption('DoorsOS')
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
 
-        self.paused = False
+        self.play_button = Button.from_centre_coords(
+            'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.2, BLACK, GREY, 30, self.play_game)
+        self.score_board_button = Button.from_centre_coords(
+            'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.3, BLACK, GREY, 30, None)
+        self.exit_button = Button.from_centre_coords(
+            'Exit to desktop', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 30, self.menu_running_false)
+
+        self.panels = [self.play_button,
+                       self.score_board_button, self.exit_button]
+
+    def play_game(self):
+        game = DoorsOS(self.clock, self.screen)
+        exit_code = game.get_exit_code()
+        if exit_code == pygame.QUIT:
+            self.running = False
+
+    def menu_running_false(self):
+        self.running = False
+
+    def run(self):
         self.running = True
+
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.send_click_to_panel(event)
+
+            if not self.running:
+                break
+
+            pygame.display.set_caption(
+                f'DoorsOS {round(self.clock.get_fps())}fps')
+            self.update_panels()
+            self.update_screen()
+            self.clock.tick(FPS)
+
+    def update_panels(self):
+        for panel in self.panels:
+            panel.update()
+
+    def update_screen(self):
+        self.screen.fill(WHITE)
+        for panel in self.panels:
+            panel.draw(self.screen)
+
+        pygame.display.update()
+
+    def send_click_to_panel(self, event: pygame.event.Event):
+        x, y = event.pos
+        for panel in self.panels:
+            if panel.rect.collidepoint(x, y):
+                panel.click(x, y)
+
+
+class DoorsOS:
+    def __init__(self, clock, screen):
+        self.clock = clock
+        self.screen = screen
+        self.exit_code = 0
+        self.resume_button = Button.from_centre_coords(
+            'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.unpause_game)
+        self.exit_to_main_menu_button = Button.from_centre_coords(
+            'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, self.end_game)
+        self.play_game()
+
+    def reset_game(self):
+        self.paused = False
         self.info_bar = InfoBar()
         self.task_list = TaskList()
         self.frustration_bar = FrustrationBar()
         self.current_mini_game = minigames.MiniGame()
+        self.panels: list[InfoBar | FrustrationBar
+                          | TaskList | minigames.MiniGame | Button] = [self.info_bar,
+                                                                       self.current_mini_game, self.frustration_bar, self.task_list]
 
-        self.resume_button = Button.from_centre_coords(
-            'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.unpause_game)
-        self.main_menu_button = Button.from_centre_coords(
-            'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, None)
-
-        self.active_panels: list[InfoBar | FrustrationBar
-                                 | TaskList | minigames.MiniGame | Button] = [self.info_bar,
-                                                                              self.current_mini_game, self.frustration_bar, self.task_list]
+    def get_exit_code(self):
+        return self.exit_code
 
     def play_game(self):
-        while self.running:
+        self.reset_game()
+        self.game_running = True
+        escape_exit_code = 0
+        while self.game_running:
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
-                    self.running = False
+                    self.end_game(True)
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -275,7 +341,7 @@ class DoorsOS:
                     if event.key == pygame.K_ESCAPE:
                         escape_exit_code = self.pause_game()
                         if escape_exit_code == pygame.QUIT:
-                            self.running = False
+                            self.game_running = False
                         else:
                             self.info_bar.paused_intervals.append(
                                 escape_exit_code)
@@ -283,7 +349,7 @@ class DoorsOS:
                 if event.type == pygame.MOUSEWHEEL:
                     self.frustration_bar.frustration_level += event.y
 
-            if not self.running:
+            if not self.game_running:
                 break
 
             pygame.display.set_caption(
@@ -292,13 +358,19 @@ class DoorsOS:
             self.update_screen()
             self.clock.tick(FPS)
 
+    def end_game(self, complete_exit = False):
+        self.game_running = False
+        if complete_exit:
+            self.exit_code = pygame.QUIT
+        self.unpause_game()
+
     def update_panels(self):
-        for panel in self.active_panels:
+        for panel in self.panels:
             panel.update()
 
     def update_screen(self):
         self.screen.fill(WHITE)
-        for panel in self.active_panels:
+        for panel in self.panels:
             panel.draw(self.screen)
 
         pygame.display.update()
@@ -306,8 +378,8 @@ class DoorsOS:
     def pause_game(self):
         self.paused = True
         start_time = time.time()
-        self.active_panels = [self.info_bar,
-                              self.resume_button, self.main_menu_button]
+        self.panels = [self.info_bar,
+                       self.resume_button, self.exit_to_main_menu_button]
         while self.paused:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -325,13 +397,13 @@ class DoorsOS:
             self.update_screen()
             self.clock.tick(FPS)
 
-        self.active_panels = [
+        self.panels = [
             self.info_bar, self.current_mini_game, self.frustration_bar, self.task_list]
         return (start_time, time.time())
 
     def send_click_to_panel(self, event: pygame.event.Event):
         x, y = event.pos
-        for panel in self.active_panels:
+        for panel in self.panels:
             if panel.rect.collidepoint(x, y):
                 panel.click(x, y)
 
@@ -340,8 +412,7 @@ class DoorsOS:
 
 
 def main():
-    game = DoorsOS()
-    game.play_game()
+    MainMenu().run()
 
 
 if __name__ == '__main__':
