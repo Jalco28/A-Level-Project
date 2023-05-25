@@ -107,6 +107,9 @@ class TaskList:
             SCREEN_WIDTH*0.715, SCREEN_HEIGHT*0.13, SCREEN_WIDTH*0.2, SCREEN_HEIGHT * 0.85+1)
         self.tasks: list[Task] = []
         self.clicks_to_handle = []
+        if DEBUG:
+            for task in Task.TASK_DESCRIPTIONS:
+                self.add_task(task)
 
     def draw(self, screen: pygame.Surface):
         for task in self.tasks:
@@ -122,16 +125,37 @@ class TaskList:
         for task in self.tasks:
             task.update()
 
-    def add_task(self):
+    def add_task(self, description=None):
         if len(self.tasks) < 8:
-            self.tasks.append(Task(len(self.tasks), self))
+            self.tasks.append(Task(len(self.tasks), self, description))
 
     def click(self, x, y):
         self.clicks_to_handle.append((x, y))
 
 
 class Task:
-    def __init__(self, index, parent):
+    TASK_PRIORITIES = {
+        'Register Mouse Inputs': 5,
+        'Memory Management': 3,
+        'Defrag Disk': 2,
+        'Select Drivers': 6,
+        'User Authentication': 7,
+        'File Access Control': 5,
+        'Data encryption': 6,
+        'Data compression': 4
+    }
+    TASK_DESCRIPTIONS = [
+        'Register Mouse Inputs',
+        'Memory Management',
+        'Defrag Disk',
+        'Select Drivers',
+        'User Authentication',
+        'File Access Control',
+        'Data encryption',
+        'Data compression'
+    ]
+
+    def __init__(self, index, parent, description):
         self.parent: TaskList = parent
         self.index = index
         self.HEIGHT = 103  # Mank number so 8 tasks nicely fit into the list
@@ -139,26 +163,20 @@ class Task:
                                 index*self.HEIGHT, self.parent.rect.width, self.HEIGHT)
         self.description_font = pygame.font.SysFont('Arial', 35)
         self.sub_font = pygame.font.SysFont('Arial', 25)
-        self.description = random.choice([
-            'Register Mouse Inputs',
-            'Memory Management',
-            'Defrag Disk',
-            'Select Drivers',
-            'User Authentication',
-            'File Access Control',
-            'Data encryption',
-            'Data compression'
-        ])
+        if description is None:
+            self.description = random.choice(Task.TASK_DESCRIPTIONS)
+        else:
+            self.description = description
         self.clicks_to_handle = []
 
         self.time_required = random.randint(
-            1, TASK_PRIORITIES[self.description])
+            1, Task.TASK_PRIORITIES[self.description])
 
         self.description_text = self.description_font.render(
             self.description, True, BLACK)
 
         self.priority_text = self.sub_font.render(
-            f'Priority: {TASK_PRIORITIES[self.description]}', True, BLACK)
+            f'Priority: {Task.TASK_PRIORITIES[self.description]}', True, BLACK)
 
         self.time_text = self.sub_font.render(
             f'Time required: {self.time_required}', True, BLACK)
@@ -239,11 +257,11 @@ class MainMenu:
         self.clock = pygame.time.Clock()
 
         self.play_button = Button.from_centre_coords(
-            'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.2, BLACK, GREY, 30, self.play_game)
+            'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.3, BLACK, GREY, 50, self.play_game)
         self.score_board_button = Button.from_centre_coords(
-            'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.3, BLACK, GREY, 30, None)
+            'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, None)
         self.exit_button = Button.from_centre_coords(
-            'Exit to desktop', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 30, self.menu_running_false)
+            'Exit to desktop', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.7, BLACK, GREY, 50, self.menu_running_false)
 
         self.panels = [self.play_button,
                        self.score_board_button, self.exit_button]
@@ -312,7 +330,7 @@ class DoorsOS:
         self.info_bar = InfoBar()
         self.task_list = TaskList()
         self.frustration_bar = FrustrationBar()
-        self.current_mini_game = minigames.MiniGame()
+        self.current_mini_game = minigames.EmptyMiniGame()
         self.panels: list[InfoBar | FrustrationBar
                           | TaskList | minigames.MiniGame | Button] = [self.info_bar,
                                                                        self.current_mini_game, self.frustration_bar, self.task_list]
@@ -358,7 +376,7 @@ class DoorsOS:
             self.update_screen()
             self.clock.tick(FPS)
 
-    def end_game(self, complete_exit = False):
+    def end_game(self, complete_exit=False):
         self.game_running = False
         if complete_exit:
             self.exit_code = pygame.QUIT
