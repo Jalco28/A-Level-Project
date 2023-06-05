@@ -154,6 +154,16 @@ class Task:
         'Data encryption',
         'Data compression'
     ]
+    TASK_OBJECTS = {
+        'Register Mouse Inputs': minigames.RegisterMouseInputs,
+        'Memory Management': minigames.MemoryManagement,
+        'Defrag Disk': minigames.DefragDisk,
+        'Select Drivers': minigames.SelectDrivers,
+        'User Authentication': minigames.UserAuthentication,
+        'File Access Control': minigames.FileAccessControl,
+        'Data encryption': minigames.DataEncryption,
+        'Data compression': minigames.DataCompression
+    }
 
     def __init__(self, index, parent, description):
         self.parent: TaskList = parent
@@ -184,7 +194,7 @@ class Task:
             'Play mini-game', self.rect.right-180, self.rect.bottom-60, BLACK, GREY, 25, self.play_button_action)
 
     def play_button_action(self):
-        pass
+        main_menu.game.change_minigame(Task.TASK_OBJECTS[self.description])
 
     def draw(self, screen: pygame.Surface):
         if self.index % 2 == 0:
@@ -267,8 +277,9 @@ class MainMenu:
                        self.score_board_button, self.exit_button]
 
     def play_game(self):
-        game = DoorsOS(self.clock, self.screen)
-        exit_code = game.get_exit_code()
+        self.game = DoorsOS(self.clock, self.screen)
+        self.game.play_game()
+        exit_code = self.game.get_exit_code()
         if exit_code == pygame.QUIT:
             self.running = False
 
@@ -323,7 +334,6 @@ class DoorsOS:
             'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.unpause_game)
         self.exit_to_main_menu_button = Button.from_centre_coords(
             'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, self.end_game)
-        self.play_game()
 
     def reset_game(self):
         self.paused = False
@@ -382,6 +392,10 @@ class DoorsOS:
             self.exit_code = pygame.QUIT
         self.unpause_game()
 
+    def change_minigame(self, minigame):
+        self.current_mini_game = minigame()
+        self.panels[1] = self.current_mini_game
+
     def update_panels(self):
         for panel in self.panels:
             panel.update()
@@ -429,9 +443,6 @@ class DoorsOS:
         self.paused = False
 
 
-def main():
-    MainMenu().run()
-
-
 if __name__ == '__main__':
-    main()
+    main_menu = MainMenu()
+    main_menu.run()
