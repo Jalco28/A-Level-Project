@@ -7,16 +7,19 @@ from functools import partial
 
 
 class InfoBar:
-    def __init__(self, difficulty):
+    def __init__(self, mode, difficulty):
         self.rect = pygame.Rect(5, 5, SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.1)
         self.background_colour = GREY
         self.border_colour = BLACK
         self.FONT_SIZE = 40
+        self.mode = mode
         self.font = pygame.font.SysFont("Arial", self.FONT_SIZE)
         self.start_time = time.time()
         self.paused_intervals: list[tuple[float, float]] = []
-
-        self.mode = 'Regular Play'
+        if self.mode == REGULAR_PLAY:
+            self.mode_text = 'Regular Play'
+        else:
+            self.mode_text = 'Zen Mode'
         self.score = 0
         if difficulty == GCSE:
             self.difficulty_level = 1
@@ -28,7 +31,7 @@ class InfoBar:
         pygame.draw.rect(screen, self.border_colour, self.rect, 5, 2)
 
         mode_text = self.font.render(
-            self.mode, True,  BLACK, self.background_colour)
+            self.mode_text, True,  BLACK, self.background_colour)
         score_text = self.font.render(
             f'Score: {self.score}', True, BLACK, self.background_colour)
         difficulty_text = self.font.render(
@@ -202,9 +205,9 @@ class Task:
 
     def draw(self, screen: pygame.Surface):
         if self.index % 2 == 0:
-            pygame.draw.rect(screen, DEBUG_BLUE, self.rect)
+            pygame.draw.rect(screen, BLUE, self.rect)
         else:
-            pygame.draw.rect(screen, DEBUG_GREEN, self.rect)
+            pygame.draw.rect(screen, GREEN, self.rect)
 
         pygame.draw.line(screen, BLACK, self.rect.bottomleft,
                          (self.rect.right-5, self.rect.bottom), 3)
@@ -240,7 +243,8 @@ class Button:
         self.text_rect.center = self.rect.center
         self.border_colour = border_colour
         self.background_colour = background_colour
-        self.action = action
+        if not isinstance(self, ToggleButton):
+            self.action = action
 
     @classmethod
     def from_centre_coords(cls, text, centre_x, centre_y, border_colour, background_colour, font_size, action):
@@ -263,6 +267,38 @@ class Button:
         self.action()
 
 
+class ToggleButton(Button):
+    def __init__(self, text, left, top, border_colour, background_colour, active_background_colour, font_size, active):
+        super().__init__(text, left, top, border_colour, background_colour, font_size, None)
+        self.active = active
+        self.active_background_colour = active_background_colour
+
+    @classmethod
+    def from_centre_coords(cls, text, centre_x, centre_y, border_colour, background_colour, active_background_colour, font_size, active):
+        font = pygame.font.SysFont('Arial', font_size)
+        rendered_text = font.render(text, True, BLACK)
+        rect = pygame.Rect(0, 0, rendered_text.get_width(),
+                           rendered_text.get_height())
+        rect.center = (centre_x, centre_y)
+        return cls(text, rect.left, rect.top, border_colour, background_colour, active_background_colour, font_size, active)
+
+    def set_partners(self, partners):
+        self.partners = partners
+
+    def click(self, x, y):
+        self.active = True
+        for partner in self.partners:
+            partner.active = False
+
+    def draw(self, screen: pygame.Surface):
+        if self.active:
+            pygame.draw.rect(screen, self.active_background_colour, self.rect)
+        else:
+            pygame.draw.rect(screen, self.background_colour, self.rect)
+        pygame.draw.rect(screen, self.border_colour, self.rect, 2)
+        screen.blit(self.rendered_text, self.text_rect)
+
+
 class MainMenu:
     def __init__(self):
         pygame.init()
@@ -277,25 +313,54 @@ class MainMenu:
         self.exit_button = Button.from_centre_coords(
             'Exit to desktop', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.7, BLACK, GREY, 50, self.menu_running_false)
 
-        self.gcse_button = Button.from_centre_coords(
-            'GCSE', SCREEN_WIDTH*0.4, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, partial(self.play_game, GCSE))
-        self.alevel_button = Button.from_centre_coords(
-            'A-Level', SCREEN_WIDTH*0.6, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, partial(self.play_game, ALEVEL))
+        self.regular_button = ToggleButton.from_centre_coords(
+            'Regular play', SCREEN_WIDTH*0.42, SCREEN_HEIGHT*0.35, BLACK, GREY, GREEN, 50, True)
+        self.zen_button = ToggleButton.from_centre_coords(
+            'Zen mode', SCREEN_WIDTH*0.57, SCREEN_HEIGHT*0.35, BLACK, GREY, GREEN, 50, False)
+        self.regular_button.set_partners([self.zen_button])
+        self.zen_button.set_partners([self.regular_button])
+
+        self.gcse_button = ToggleButton.from_centre_coords(
+            'GCSE', SCREEN_WIDTH*0.42, SCREEN_HEIGHT*0.5, BLACK, GREY, GREEN, 50, True)
+        self.alevel_button = ToggleButton.from_centre_coords(
+            'A-Level', SCREEN_WIDTH*0.57, SCREEN_HEIGHT*0.5, BLACK, GREY, GREEN, 50, False)
+        self.gcse_button.set_partners([self.alevel_button])
+        self.alevel_button.set_partners([self.gcse_button])
+
+        self.back_button = Button.from_centre_coords(
+            'Back', SCREEN_WIDTH*0.42, SCREEN_HEIGHT*0.65, BLACK, GREY, 50, self.reset_panels)
+        self.confirm_button = Button.from_centre_coords(
+            'Play', SCREEN_WIDTH*0.57, SCREEN_HEIGHT*0.65, BLACK, GREY, 50, self.play_game)
 
         self.panels = [self.play_button,
                        self.score_board_button, self.exit_button]
 
     def choose_difficulty(self):
-        self.panels = [self.gcse_button, self.alevel_button]
+        self.panels = [self.gcse_button, self.alevel_button, self.regular_button,
+                       self.zen_button, self.back_button, self.confirm_button]
 
-    def play_game(self, difficulty):
+    def play_game(self):
+        if self.gcse_button.active:
+            difficulty = GCSE
+        else:
+            difficulty = ALEVEL
+
+        if self.regular_button.active:
+            mode = REGULAR_PLAY
+        else:
+            mode = ZEN_MODE
+
         self.panels = [self.play_button,
                        self.score_board_button, self.exit_button]
-        self.game = DoorsOS(self.clock, self.screen, difficulty)
+        self.game = DoorsOS(self.clock, self.screen, difficulty, mode)
         self.game.play_game()
         exit_code = self.game.get_exit_code()
         if exit_code == pygame.QUIT:
             self.running = False
+
+    def reset_panels(self):
+        self.panels = [self.play_button,
+                       self.score_board_button, self.exit_button]
 
     def menu_running_false(self):
         self.running = False
@@ -340,10 +405,11 @@ class MainMenu:
 
 
 class DoorsOS:
-    def __init__(self, clock, screen, difficulty):
+    def __init__(self, clock, screen, difficulty, mode):
         self.clock = clock
         self.screen = screen
         self.exit_code = 0
+        self.mode = mode
         self.difficulty = difficulty
         self.resume_button = Button.from_centre_coords(
             'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.unpause_game)
@@ -352,7 +418,7 @@ class DoorsOS:
 
     def reset_game(self):
         self.paused = False
-        self.info_bar = InfoBar(self.difficulty)
+        self.info_bar = InfoBar(self.mode, self.difficulty)
         self.task_list = TaskList()
         self.frustration_bar = FrustrationBar()
         self.current_mini_game = minigames.EmptyMiniGame()
