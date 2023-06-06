@@ -3,10 +3,11 @@ import pygame
 import time
 import minigames
 from constants import *
+from functools import partial
 
 
 class InfoBar:
-    def __init__(self):
+    def __init__(self, difficulty):
         self.rect = pygame.Rect(5, 5, SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.1)
         self.background_colour = GREY
         self.border_colour = BLACK
@@ -17,7 +18,10 @@ class InfoBar:
 
         self.mode = 'Regular Play'
         self.score = 0
-        self.difficulty_level = 1
+        if difficulty == GCSE:
+            self.difficulty_level = 1
+        else:
+            self.difficulty_level = 10
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, self.background_colour, self.rect)
@@ -267,17 +271,27 @@ class MainMenu:
         self.clock = pygame.time.Clock()
 
         self.play_button = Button.from_centre_coords(
-            'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.3, BLACK, GREY, 50, self.play_game)
+            'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.3, BLACK, GREY, 50, self.choose_difficulty)
         self.score_board_button = Button.from_centre_coords(
             'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, None)
         self.exit_button = Button.from_centre_coords(
             'Exit to desktop', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.7, BLACK, GREY, 50, self.menu_running_false)
 
+        self.gcse_button = Button.from_centre_coords(
+            'GCSE', SCREEN_WIDTH*0.4, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, partial(self.play_game, GCSE))
+        self.alevel_button = Button.from_centre_coords(
+            'A-Level', SCREEN_WIDTH*0.6, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, partial(self.play_game, ALEVEL))
+
         self.panels = [self.play_button,
                        self.score_board_button, self.exit_button]
 
-    def play_game(self):
-        self.game = DoorsOS(self.clock, self.screen)
+    def choose_difficulty(self):
+        self.panels = [self.gcse_button, self.alevel_button]
+
+    def play_game(self, difficulty):
+        self.panels = [self.play_button,
+                       self.score_board_button, self.exit_button]
+        self.game = DoorsOS(self.clock, self.screen, difficulty)
         self.game.play_game()
         exit_code = self.game.get_exit_code()
         if exit_code == pygame.QUIT:
@@ -326,10 +340,11 @@ class MainMenu:
 
 
 class DoorsOS:
-    def __init__(self, clock, screen):
+    def __init__(self, clock, screen, difficulty):
         self.clock = clock
         self.screen = screen
         self.exit_code = 0
+        self.difficulty = difficulty
         self.resume_button = Button.from_centre_coords(
             'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.unpause_game)
         self.exit_to_main_menu_button = Button.from_centre_coords(
@@ -337,7 +352,7 @@ class DoorsOS:
 
     def reset_game(self):
         self.paused = False
-        self.info_bar = InfoBar()
+        self.info_bar = InfoBar(self.difficulty)
         self.task_list = TaskList()
         self.frustration_bar = FrustrationBar()
         self.current_mini_game = minigames.EmptyMiniGame()
