@@ -97,11 +97,9 @@ class FrustrationBar:
         label = pygame.transform.rotate(label, 270)
         text_rect = pygame.Rect(0, 0, label.get_width(), label.get_height())
         text_rect.center = (self.rect.centerx+63, self.rect.centery)
-        # pygame.draw.rect(screen, DEBUG_GREEN, text_rect)
         screen.blit(label, text_rect)
 
     def update(self):
-        # self.frustration_level += random.randint(-2, 2)
         self.frustration_level = self.frustration_level % 101
 
     def click(self, x, y):
@@ -228,7 +226,7 @@ class Task:
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
             if self.play_button.rect.collidepoint(x, y):
-                self.play_button.action()
+                self.play_button.click()
 
 
 class MainMenu:
@@ -373,7 +371,6 @@ class DoorsOS:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
-                        # self.info_bar.difficulty_level += 1
                         self.send_click_to_panel(event)
                     if event.button == 3:
                         self.task_list.add_task()
@@ -413,6 +410,13 @@ class DoorsOS:
         for panel in self.panels:
             panel.update()
 
+        if self.current_mini_game.finished:
+            if self.current_mini_game.success:
+                self.frustration_bar.frustration_level -= 10
+            else:
+                self.frustration_bar.frustration_level += 10
+            self.change_minigame(minigames.EmptyMiniGame)
+
     def update_screen(self):
         self.screen.fill(WHITE)
         for panel in self.panels:
@@ -436,7 +440,6 @@ class DoorsOS:
                     if event.button == 1:
                         self.send_click_to_panel(event)
 
-            # self.update_panels()
             pygame.display.set_caption(
                 f'DoorsOS {round(self.clock.get_fps())}fps')
             self.update_screen()

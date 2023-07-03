@@ -1,5 +1,6 @@
 import pygame
 from constants import *
+from utils import *
 
 
 class MiniGame:
@@ -8,6 +9,10 @@ class MiniGame:
                                 SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85)
         self.clicks_to_handle = []
         self.font = pygame.font.SysFont('Arial', 70)
+        self.forfeit_button = Button.from_centre_coords(
+            'Forfeit', self.rect.right-70, self.rect.top+40, BLACK, GREY, 40, self.forfeit)
+        self.finished = False
+        self.success = None
 
     def draw(self, screen: pygame.Surface):
         raise NotImplementedError('Can\'t draw base minigame')
@@ -15,17 +20,30 @@ class MiniGame:
     def draw_border(self, screen: pygame.Surface):
         pygame.draw.rect(screen, BLACK, self.rect, 5, 1)
 
+    def draw_forfeit_button(self, screen: pygame.Surface):
+        self.forfeit_button.draw(screen)
+
+    def common_drawing(self, screen: pygame.Surface):
+        self.draw_forfeit_button(screen)
+        self.draw_border(screen)
+
     def click(self, x, y):
         self.clicks_to_handle.append((x, y))
 
     def update(self):
-        raise NotImplementedError('Can\'t update base minigame')
+        if (not isinstance(self, EmptyMiniGame)) or (not isinstance(self, MiniGame)):
+            self.forfeit_button.update()
+
+    def forfeit(self):
+        self.finished = True
+        self.success = False
 
 
 class EmptyMiniGame(MiniGame):
     def __init__(self):
         super().__init__()
 
+        del self.forfeit_button
         self.label1 = self.font.render(
             'Hurry! Select a task from the task', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
@@ -40,9 +58,10 @@ class EmptyMiniGame(MiniGame):
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
-        self.draw_border(screen)
         screen.blit(self.label1, self.label1_rect)
         screen.blit(self.label2, self.label2_rect)
+
+        self.draw_border(screen)
 
     def update(self):
         self.clicks_to_handle = []
@@ -59,11 +78,15 @@ class RegisterMouseInputs(MiniGame):
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
-        self.draw_border(screen)
         screen.blit(self.label1, self.label1_rect)
 
+        self.common_drawing(screen)
+
     def update(self):
-        self.clicks_to_handle = []
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            if self.forfeit_button.rect.collidepoint(x,y):
+                self.forfeit_button.click()
 
 
 class MemoryManagement(MiniGame):
@@ -77,11 +100,15 @@ class MemoryManagement(MiniGame):
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
-        self.draw_border(screen)
         screen.blit(self.label1, self.label1_rect)
 
+        self.common_drawing(screen)
+
     def update(self):
-        self.clicks_to_handle = []
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            if self.forfeit_button.rect.collidepoint(x,y):
+                self.forfeit_button.click()
 
 
 class DefragDisk(MiniGame):
@@ -95,11 +122,15 @@ class DefragDisk(MiniGame):
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
-        self.draw_border(screen)
         screen.blit(self.label1, self.label1_rect)
 
+        self.common_drawing(screen)
+
     def update(self):
-        self.clicks_to_handle = []
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            if self.forfeit_button.rect.collidepoint(x,y):
+                self.forfeit_button.click()
 
 
 class SelectDrivers(MiniGame):
@@ -113,11 +144,15 @@ class SelectDrivers(MiniGame):
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
-        self.draw_border(screen)
         screen.blit(self.label1, self.label1_rect)
 
+        self.common_drawing(screen)
+
     def update(self):
-        self.clicks_to_handle = []
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            if self.forfeit_button.rect.collidepoint(x,y):
+                self.forfeit_button.click()
 
 
 class UserAuthentication(MiniGame):
@@ -131,11 +166,15 @@ class UserAuthentication(MiniGame):
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
-        self.draw_border(screen)
         screen.blit(self.label1, self.label1_rect)
 
+        self.common_drawing(screen)
+
     def update(self):
-        self.clicks_to_handle = []
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            if self.forfeit_button.rect.collidepoint(x,y):
+                self.forfeit_button.click()
 
 
 class FileAccessControl(MiniGame):
@@ -149,11 +188,15 @@ class FileAccessControl(MiniGame):
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
-        self.draw_border(screen)
         screen.blit(self.label1, self.label1_rect)
 
+        self.common_drawing(screen)
+
     def update(self):
-        self.clicks_to_handle = []
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            if self.forfeit_button.rect.collidepoint(x,y):
+                self.forfeit_button.click()
 
 
 class DataEncryption(MiniGame):
@@ -167,11 +210,15 @@ class DataEncryption(MiniGame):
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
-        self.draw_border(screen)
         screen.blit(self.label1, self.label1_rect)
 
+        self.common_drawing(screen)
+
     def update(self):
-        self.clicks_to_handle = []
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            if self.forfeit_button.rect.collidepoint(x,y):
+                self.forfeit_button.click()
 
 
 class DataCompression(MiniGame):
@@ -185,8 +232,12 @@ class DataCompression(MiniGame):
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
-        self.draw_border(screen)
         screen.blit(self.label1, self.label1_rect)
 
+        self.common_drawing(screen)
+
     def update(self):
-        self.clicks_to_handle = []
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            if self.forfeit_button.rect.collidepoint(x,y):
+                self.forfeit_button.click()

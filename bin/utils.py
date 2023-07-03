@@ -34,7 +34,7 @@ class Button:
     def update(self):
         pass
 
-    def click(self, x, y):
+    def click(self, *args, **kwargs):
         self.action()
 
 
