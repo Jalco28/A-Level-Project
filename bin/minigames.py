@@ -9,7 +9,7 @@ class MiniGame:
                                 SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85)
         self.clicks_to_handle = []
         self.font = pygame.font.SysFont('Arial', 70)
-        self.forfeit_button = Button.from_centre_coords(
+        self.forfeit_button = Button(
             'Forfeit', self.rect.right-70, self.rect.top+40, BLACK, GREY, 40, self.forfeit)
         self.finished = False
         self.success = None
@@ -85,7 +85,7 @@ class RegisterMouseInputs(MiniGame):
     def update(self):
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
-            if self.forfeit_button.rect.collidepoint(x,y):
+            if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()
 
 
@@ -107,7 +107,7 @@ class MemoryManagement(MiniGame):
     def update(self):
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
-            if self.forfeit_button.rect.collidepoint(x,y):
+            if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()
 
 
@@ -129,7 +129,7 @@ class DefragDisk(MiniGame):
     def update(self):
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
-            if self.forfeit_button.rect.collidepoint(x,y):
+            if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()
 
 
@@ -151,7 +151,7 @@ class SelectDrivers(MiniGame):
     def update(self):
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
-            if self.forfeit_button.rect.collidepoint(x,y):
+            if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()
 
 
@@ -173,7 +173,7 @@ class UserAuthentication(MiniGame):
     def update(self):
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
-            if self.forfeit_button.rect.collidepoint(x,y):
+            if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()
 
 
@@ -195,7 +195,7 @@ class FileAccessControl(MiniGame):
     def update(self):
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
-            if self.forfeit_button.rect.collidepoint(x,y):
+            if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()
 
 
@@ -217,7 +217,7 @@ class DataEncryption(MiniGame):
     def update(self):
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
-            if self.forfeit_button.rect.collidepoint(x,y):
+            if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()
 
 
@@ -239,5 +239,5 @@ class DataCompression(MiniGame):
     def update(self):
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
-            if self.forfeit_button.rect.collidepoint(x,y):
+            if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()

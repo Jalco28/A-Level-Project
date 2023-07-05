@@ -195,8 +195,9 @@ class Task:
 
         self.time_text = self.sub_font.render(
             f'Time required: {self.time_required}', True, BLACK)
+
         self.play_button = Button(
-            'Play mini-game', self.rect.right-180, self.rect.bottom-60, BLACK, GREY, 25, self.play_button_action)
+            'Play mini-game', self.rect.right-103, self.rect.bottom-43, BLACK, GREY, 25, self.play_button_action)
 
     def play_button_action(self):
         main_menu.game.change_minigame(Task.TASK_OBJECTS[self.description])
@@ -236,30 +237,30 @@ class MainMenu:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
 
-        self.play_button = Button.from_centre_coords(
+        self.play_button = Button(
             'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.3, BLACK, GREY, 50, self.choose_difficulty)
-        self.score_board_button = Button.from_centre_coords(
+        self.score_board_button = Button(
             'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, None)
-        self.exit_button = Button.from_centre_coords(
+        self.exit_button = Button(
             'Exit to desktop', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.7, BLACK, GREY, 50, self.menu_running_false)
 
-        self.regular_button = ToggleButton.from_centre_coords(
+        self.regular_button = ToggleButton(
             'Regular play', SCREEN_WIDTH*0.42, SCREEN_HEIGHT*0.35, BLACK, GREY, GREEN, 50, True)
-        self.zen_button = ToggleButton.from_centre_coords(
+        self.zen_button = ToggleButton(
             'Zen mode', SCREEN_WIDTH*0.57, SCREEN_HEIGHT*0.35, BLACK, GREY, GREEN, 50, False)
         self.regular_button.set_partners([self.zen_button])
         self.zen_button.set_partners([self.regular_button])
 
-        self.gcse_button = ToggleButton.from_centre_coords(
+        self.gcse_button = ToggleButton(
             'GCSE', SCREEN_WIDTH*0.42, SCREEN_HEIGHT*0.5, BLACK, GREY, GREEN, 50, True)
-        self.alevel_button = ToggleButton.from_centre_coords(
+        self.alevel_button = ToggleButton(
             'A-Level', SCREEN_WIDTH*0.57, SCREEN_HEIGHT*0.5, BLACK, GREY, GREEN, 50, False)
         self.gcse_button.set_partners([self.alevel_button])
         self.alevel_button.set_partners([self.gcse_button])
 
-        self.back_button = Button.from_centre_coords(
+        self.back_button = Button(
             'Back', SCREEN_WIDTH*0.42, SCREEN_HEIGHT*0.65, BLACK, GREY, 50, self.reset_panels)
-        self.confirm_button = Button.from_centre_coords(
+        self.confirm_button = Button(
             'Play', SCREEN_WIDTH*0.57, SCREEN_HEIGHT*0.65, BLACK, GREY, 50, self.play_game)
 
         self.panels = [self.play_button,
@@ -341,9 +342,9 @@ class DoorsOS:
         self.exit_code = 0
         self.mode = mode
         self.difficulty = difficulty
-        self.resume_button = Button.from_centre_coords(
+        self.resume_button = Button(
             'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.unpause_game)
-        self.exit_to_main_menu_button = Button.from_centre_coords(
+        self.exit_to_main_menu_button = Button(
             'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, self.end_game)
 
     def reset_game(self):
