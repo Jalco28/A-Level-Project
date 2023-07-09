@@ -134,8 +134,15 @@ class TaskList:
         if len(self.tasks) < 8:
             self.tasks.append(Task(len(self.tasks), self, description))
 
+    def remove_task(self, index):
+        self.tasks.pop(index)
+        for idx, task in enumerate(self.tasks):
+            task.set_index(idx)
+
     def click(self, x, y):
         self.clicks_to_handle.append((x, y))
+
+
 
 
 class Task:
@@ -175,7 +182,7 @@ class Task:
         self.index = index
         self.HEIGHT = 103  # Mank number so 8 tasks nicely fit into the list
         self.rect = pygame.Rect(self.parent.rect.left, self.parent.rect.top + 1 +
-                                index*self.HEIGHT, self.parent.rect.width, self.HEIGHT)
+                                self.index*self.HEIGHT, self.parent.rect.width, self.HEIGHT)
         self.description_font = pygame.font.SysFont('Arial', 35)
         self.sub_font = pygame.font.SysFont('Arial', 25)
         if description is None:
@@ -200,7 +207,9 @@ class Task:
             'Play mini-game', self.rect.right-103, self.rect.bottom-43, BLACK, GREY, 25, self.play_button_action)
 
     def play_button_action(self):
-        main_menu.game.change_minigame(Task.TASK_OBJECTS[self.description])
+        if isinstance(main_menu.game.current_mini_game, minigames.EmptyMiniGame):
+            main_menu.game.change_minigame(Task.TASK_OBJECTS[self.description])
+            self.parent.remove_task(self.index)
 
     def draw(self, screen: pygame.Surface):
         if self.index % 2 == 0:
@@ -228,6 +237,14 @@ class Task:
             x, y = self.clicks_to_handle.pop(0)
             if self.play_button.rect.collidepoint(x, y):
                 self.play_button.click()
+
+    def set_index(self, index):
+        self.index = index
+        self.rect = pygame.Rect(self.parent.rect.left, self.parent.rect.top + 1 +
+                                self.index*self.HEIGHT, self.parent.rect.width, self.HEIGHT)
+        self.play_button = Button(
+            'Play mini-game', self.rect.right-103, self.rect.bottom-43, BLACK, GREY, 25, self.play_button_action)
+
 
 
 class MainMenu:
