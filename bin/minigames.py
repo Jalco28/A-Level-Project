@@ -4,35 +4,44 @@ from utils import *
 
 
 class MiniGame:
+    @classmethod
+    def translate_coords(cls, x, y):
+        return x-5, y-(SCREEN_HEIGHT*0.13)
+
     def __init__(self):
         self.rect = pygame.Rect(5, SCREEN_HEIGHT*0.13,
                                 SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85)
+        self.sub_rect = pygame.Rect(
+            0, 0, SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85)
         self.clicks_to_handle = []
         self.font = pygame.font.SysFont('Arial', 70)
         self.forfeit_button = Button(
-            'Forfeit', self.rect.right-70, self.rect.top+40, BLACK, GREY, 40, self.forfeit)
+            'Forfeit', self.sub_rect.right-70, self.sub_rect.top+40, BLACK, GREY, 40, self.forfeit)
         self.finished = False
         self.success = None
+        self.sub_surface = pygame.Surface(self.rect.size)
 
     def draw(self, screen: pygame.Surface):
         raise NotImplementedError('Can\'t draw base minigame')
 
-    def draw_border(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, BLACK, self.rect, 5, 1)
+    def draw_border(self):
+        pygame.draw.rect(self.sub_surface, BLACK, self.sub_rect, 5, 1)
 
-    def draw_forfeit_button(self, screen: pygame.Surface):
-        self.forfeit_button.draw(screen)
+    def draw_forfeit_button(self):
+        self.forfeit_button.draw(self.sub_surface)
 
     def common_drawing(self, screen: pygame.Surface):
-        self.draw_forfeit_button(screen)
-        self.draw_border(screen)
+        self.draw_forfeit_button()
+        self.draw_border()
+        screen.blit(self.sub_surface, self.rect)
 
     def click(self, x, y):
-        self.clicks_to_handle.append((x, y))
+        self.clicks_to_handle.append(MiniGame.translate_coords(x, y))
 
     def update(self):
-        if (not isinstance(self, EmptyMiniGame)) or (not isinstance(self, MiniGame)):
-            self.forfeit_button.update()
+        # if (not isinstance(self, EmptyMiniGame)) or (not isinstance(self, MiniGame)):
+        #     self.forfeit_button.update()
+        pass
 
     def forfeit(self):
         self.finished = True
@@ -48,20 +57,23 @@ class EmptyMiniGame(MiniGame):
             'Hurry! Select a task from the task', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
             0, 0, self.label1.get_width(), self.label1.get_height())
-        self.label1_rect.center = (self.rect.centerx, self.rect.height*0.5)
+        self.label1_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.5)
 
         self.label2 = self.font.render(
             'list to lower the user\'s frustration!', True, BLACK, GREY)
         self.label2_rect = pygame.Rect(
             0, 0, self.label2.get_width(), self.label2.get_height())
-        self.label2_rect.center = (self.rect.centerx, self.rect.height*0.6)
+        self.label2_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.6)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        screen.blit(self.label1, self.label1_rect)
-        screen.blit(self.label2, self.label2_rect)
+        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        self.sub_surface.blit(self.label1, self.label1_rect)
+        self.sub_surface.blit(self.label2, self.label2_rect)
 
-        self.draw_border(screen)
+        self.draw_border()
+        screen.blit(self.sub_surface, self.rect)
 
     def update(self):
         self.clicks_to_handle = []
@@ -74,11 +86,12 @@ class RegisterMouseInputs(MiniGame):
             'Register Mouse Inputs', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
             0, 0, self.label1.get_width(), self.label1.get_height())
-        self.label1_rect.center = (self.rect.centerx, self.rect.height*0.5)
+        self.label1_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.5)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        screen.blit(self.label1, self.label1_rect)
+        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        self.sub_surface.blit(self.label1, self.label1_rect)
 
         self.common_drawing(screen)
 
@@ -96,11 +109,12 @@ class MemoryManagement(MiniGame):
             'Memory Management', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
             0, 0, self.label1.get_width(), self.label1.get_height())
-        self.label1_rect.center = (self.rect.centerx, self.rect.height*0.5)
+        self.label1_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.5)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        screen.blit(self.label1, self.label1_rect)
+        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        self.sub_surface.blit(self.label1, self.label1_rect)
 
         self.common_drawing(screen)
 
@@ -118,11 +132,12 @@ class DefragDisk(MiniGame):
             'Defrag Disk', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
             0, 0, self.label1.get_width(), self.label1.get_height())
-        self.label1_rect.center = (self.rect.centerx, self.rect.height*0.5)
+        self.label1_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.5)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        screen.blit(self.label1, self.label1_rect)
+        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        self.sub_surface.blit(self.label1, self.label1_rect)
 
         self.common_drawing(screen)
 
@@ -140,11 +155,12 @@ class SelectDrivers(MiniGame):
             'Select Drivers', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
             0, 0, self.label1.get_width(), self.label1.get_height())
-        self.label1_rect.center = (self.rect.centerx, self.rect.height*0.5)
+        self.label1_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.5)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        screen.blit(self.label1, self.label1_rect)
+        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        self.sub_surface.blit(self.label1, self.label1_rect)
 
         self.common_drawing(screen)
 
@@ -162,11 +178,12 @@ class UserAuthentication(MiniGame):
             'User Authentication', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
             0, 0, self.label1.get_width(), self.label1.get_height())
-        self.label1_rect.center = (self.rect.centerx, self.rect.height*0.5)
+        self.label1_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.5)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        screen.blit(self.label1, self.label1_rect)
+        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        self.sub_surface.blit(self.label1, self.label1_rect)
 
         self.common_drawing(screen)
 
@@ -184,11 +201,12 @@ class FileAccessControl(MiniGame):
             'File Access Control', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
             0, 0, self.label1.get_width(), self.label1.get_height())
-        self.label1_rect.center = (self.rect.centerx, self.rect.height*0.5)
+        self.label1_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.5)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        screen.blit(self.label1, self.label1_rect)
+        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        self.sub_surface.blit(self.label1, self.label1_rect)
 
         self.common_drawing(screen)
 
@@ -206,11 +224,12 @@ class DataEncryption(MiniGame):
             'Data Encryption', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
             0, 0, self.label1.get_width(), self.label1.get_height())
-        self.label1_rect.center = (self.rect.centerx, self.rect.height*0.5)
+        self.label1_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.5)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        screen.blit(self.label1, self.label1_rect)
+        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        self.sub_surface.blit(self.label1, self.label1_rect)
 
         self.common_drawing(screen)
 
@@ -228,11 +247,12 @@ class DataCompression(MiniGame):
             'Data Compression', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
             0, 0, self.label1.get_width(), self.label1.get_height())
-        self.label1_rect.center = (self.rect.centerx, self.rect.height*0.5)
+        self.label1_rect.center = (
+            self.sub_rect.centerx, self.sub_rect.height*0.5)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        screen.blit(self.label1, self.label1_rect)
+        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        self.sub_surface.blit(self.label1, self.label1_rect)
 
         self.common_drawing(screen)
 
