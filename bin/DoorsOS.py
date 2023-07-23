@@ -1,3 +1,4 @@
+import os
 import random
 import pygame
 import time
@@ -135,6 +136,8 @@ class TaskList:
             self.tasks.append(Task(len(self.tasks), self, description))
 
     def remove_task(self, index):
+        if DEBUG:
+            return
         self.tasks.pop(index)
         for idx, task in enumerate(self.tasks):
             task.set_index(idx)
@@ -478,5 +481,6 @@ class DoorsOS:
 
 
 if __name__ == '__main__':
+    os.chdir(os.path.dirname(__file__))
     main_menu = MainMenu()
     main_menu.run()
