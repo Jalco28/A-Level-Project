@@ -10,8 +10,6 @@ from utils import *
 class InfoBar:
     def __init__(self, mode, difficulty):
         self.rect = pygame.Rect(5, 5, SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.1)
-        self.background_colour = GREY
-        self.border_colour = BLACK
         self.FONT_SIZE = 40
         self.mode = mode
         self.font = pygame.font.SysFont("Arial", self.FONT_SIZE)
@@ -28,15 +26,15 @@ class InfoBar:
             self.difficulty_level = 10
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, self.background_colour, self.rect)
-        pygame.draw.rect(screen, self.border_colour, self.rect, 5, 2)
+        pygame.draw.rect(screen, GREY, self.rect)
+        pygame.draw.rect(screen, BLACK, self.rect, 5, 2)
 
         mode_text = self.font.render(
-            self.mode_text, True,  BLACK, self.background_colour)
+            self.mode_text, True,  BLACK, GREY)
         score_text = self.font.render(
-            f'Score: {self.score}', True, BLACK, self.background_colour)
+            f'Score: {self.score}', True, BLACK, GREY)
         difficulty_text = self.font.render(
-            f'Difficulty Level: {self.difficulty_level}', True, BLACK, self.background_colour)
+            f'Difficulty Level: {self.difficulty_level}', True, BLACK, GREY)
 
         mode_rect = pygame.Rect(
             0, 0, mode_text.get_width(), mode_text.get_height())
