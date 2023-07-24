@@ -1,6 +1,7 @@
 import pygame
 from constants import *
 from utils import *
+from copy import copy
 
 
 class MiniGame:
@@ -10,9 +11,9 @@ class MiniGame:
 
     def __init__(self):
         self.rect = pygame.Rect(5, SCREEN_HEIGHT*0.13,
-                                SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85)
+                                MINIGAME_WIDTH, MINIGAME_HEIGHT)
         self.sub_rect = pygame.Rect(
-            0, 0, SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85)
+            0, 0, MINIGAME_WIDTH, MINIGAME_HEIGHT)
         self.clicks_to_handle = []
         self.font = pygame.font.SysFont('Arial', 70)
         self.forfeit_button = Button(
@@ -88,18 +89,58 @@ class RegisterMouseInputs(MiniGame):
             0, 0, self.label1.get_width(), self.label1.get_height())
         self.label1_rect.center = (
             self.sub_rect.centerx, self.sub_rect.height*0.5)
+        self.buttons: dict[int, RMIButton] = {}
+        self.info_bar = STTInfoBar(20, 60)
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
-        self.sub_surface.blit(self.label1, self.label1_rect)
+        # pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
+        # self.sub_surface.blit(self.label1, self.label1_rect)
+        self.sub_surface.fill(WHITE)
+        for button in self.buttons.values():
+            button.draw(self.sub_surface)
+
+        self.info_bar.draw(self.sub_surface)
 
         self.common_drawing(screen)
 
     def update(self):
+        while len(self.buttons) < 1:
+            self.buttons[RMIButton.ID-1] = RMIButton(
+                30, self.handle_clicked_button, self.sub_rect, self.delete_button)
+        for button in copy(self.buttons).values():
+            button.update()
+
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
+            click_used = False
+
             if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()
+                click_used = True
+
+            if click_used:
+                continue
+
+            # Check clicks in reverse draw order
+            for button in reversed(self.buttons.values()):
+                if button.rect.collidepoint(x, y):
+                    button.click()
+                    click_used = True
+                    break
+
+            if click_used:
+                continue
+
+    def handle_clicked_button(self, button_id):
+        button: RMIButton = self.buttons[button_id]
+        if button.scam:
+            self.info_bar.subtract_score(3)
+        else:
+            self.info_bar.add_score(1)
+        self.buttons.pop(button_id)
+
+    def delete_button(self, button_id):
+        self.buttons.pop(button_id)
 
 
 class MemoryManagement(MiniGame):
