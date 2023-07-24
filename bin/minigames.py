@@ -17,10 +17,15 @@ class MiniGame:
         self.clicks_to_handle = []
         self.font = pygame.font.SysFont('Arial', 70)
         self.forfeit_button = Button(
-            'Forfeit', self.sub_rect.right-70, self.sub_rect.top+40, BLACK, GREY, 40, self.forfeit)
+            'Forfeit', self.sub_rect.right-70, self.sub_rect.top+40, BLACK, GREY, 40, self.question_forfeit)
+        self.confirm_forfeit_button = Button(
+            'Confirm', self.sub_rect.right-70, self.sub_rect.top+100, BLACK, GREEN, 40, self.unsuccesful_end)
+        self.cancel_forfeit_button = Button(
+            'Cancel', self.sub_rect.right-70, self.sub_rect.top+40, BLACK, RED, 40, self.cancel_forfeit)
         self.finished = False
         self.success = None
         self.sub_surface = pygame.Surface(self.rect.size)
+        self.questioning_forfeit = False
 
     def draw(self, screen: pygame.Surface):
         raise NotImplementedError('Can\'t draw base minigame')
@@ -29,7 +34,11 @@ class MiniGame:
         pygame.draw.rect(self.sub_surface, BLACK, self.sub_rect, 5, 1)
 
     def draw_forfeit_button(self):
-        self.forfeit_button.draw(self.sub_surface)
+        if self.questioning_forfeit:
+            self.confirm_forfeit_button.draw(self.sub_surface)
+            self.cancel_forfeit_button.draw(self.sub_surface)
+        else:
+            self.forfeit_button.draw(self.sub_surface)
 
     def common_drawing(self, screen: pygame.Surface):
         self.draw_forfeit_button()
@@ -44,9 +53,19 @@ class MiniGame:
         #     self.forfeit_button.update()
         pass
 
-    def forfeit(self):
+    def question_forfeit(self):
+        self.questioning_forfeit = True
+
+    def cancel_forfeit(self):
+        self.questioning_forfeit = False
+
+    def unsuccesful_end(self):
         self.finished = True
         self.success = False
+
+    def succesful_end(self):
+        self.finished = True
+        self.success = True
 
 
 class EmptyMiniGame(MiniGame):
@@ -54,6 +73,8 @@ class EmptyMiniGame(MiniGame):
         super().__init__()
 
         del self.forfeit_button
+        del self.confirm_forfeit_button
+        del self.cancel_forfeit_button
         self.label1 = self.font.render(
             'Hurry! Select a task from the task', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
@@ -115,14 +136,22 @@ class RegisterMouseInputs(MiniGame):
             x, y = self.clicks_to_handle.pop(0)
             click_used = False
 
-            if self.forfeit_button.rect.collidepoint(x, y):
-                self.forfeit_button.click()
-                click_used = True
+            if self.questioning_forfeit:
+                if self.confirm_forfeit_button.rect.collidepoint(x, y):
+                    self.confirm_forfeit_button.click()
+                    click_used = True
+                elif self.cancel_forfeit_button.rect.collidepoint(x, y):
+                    self.cancel_forfeit_button.click()
+                    click_used = True
+            else:
+                if self.forfeit_button.rect.collidepoint(x, y):
+                    self.forfeit_button.click()
+                    click_used = True
 
             if click_used:
                 continue
 
-            if self.info_bar.rect.collidepoint(x,y):
+            if self.info_bar.rect.collidepoint(x, y):
                 click_used = True
 
             if click_used:
@@ -151,7 +180,6 @@ class RegisterMouseInputs(MiniGame):
             self.info_bar.subtract_score(1)
 
         self.buttons.pop(button_id)
-
 
 
 class MemoryManagement(MiniGame):

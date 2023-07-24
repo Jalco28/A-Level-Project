@@ -83,7 +83,7 @@ class FrustrationBar:
         red_rect = pygame.Rect(self.rect.left, 0, self.WIDTH,
                                self.HEIGHT*0.01*self.frustration_level)
         red_rect.bottom = self.rect.bottom
-        pygame.draw.rect(screen, FRUSTRATION_RED, red_rect)
+        pygame.draw.rect(screen, RED, red_rect)
 
         pygame.draw.rect(screen, BLACK, self.rect, 5, 2)
         for i in range(1, 10):
@@ -142,8 +142,6 @@ class TaskList:
 
     def click(self, x, y):
         self.clicks_to_handle.append((x, y))
-
-
 
 
 class Task:
@@ -245,7 +243,6 @@ class Task:
                                 self.index*self.HEIGHT, self.parent.rect.width, self.HEIGHT)
         self.play_button = Button(
             'Play mini-game', self.rect.right-103, self.rect.bottom-43, BLACK, GREY, 25, self.play_button_action)
-
 
 
 class MainMenu:

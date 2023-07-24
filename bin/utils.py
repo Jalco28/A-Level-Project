@@ -132,7 +132,7 @@ class RMIButton:
 
     def draw(self, screen: pygame.Surface):
         if self.scam and DEBUG:
-            pygame.draw.rect(screen, FRUSTRATION_RED,
+            pygame.draw.rect(screen, RED,
                              self.rect.inflate(20, 20))
         if DEBUG:
             pygame.draw.aaline(
