@@ -422,7 +422,7 @@ class DoorsOS:
         self.unpause_game()
 
     def change_minigame(self, minigame):
-        self.current_mini_game = minigame()
+        self.current_mini_game = minigame(self.info_bar)
         self.panels[1] = self.current_mini_game
 
     def update_panels(self):

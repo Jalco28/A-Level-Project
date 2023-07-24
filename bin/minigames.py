@@ -50,7 +50,7 @@ class MiniGame:
 
 
 class EmptyMiniGame(MiniGame):
-    def __init__(self):
+    def __init__(self, *args):
         super().__init__()
 
         del self.forfeit_button
@@ -81,8 +81,9 @@ class EmptyMiniGame(MiniGame):
 
 
 class RegisterMouseInputs(MiniGame):
-    def __init__(self):
+    def __init__(self, global_info_bar):
         super().__init__()
+        self.global_info_bar = global_info_bar
         self.label1 = self.font.render(
             'Register Mouse Inputs', True, BLACK, GREY)
         self.label1_rect = pygame.Rect(
@@ -90,7 +91,7 @@ class RegisterMouseInputs(MiniGame):
         self.label1_rect.center = (
             self.sub_rect.centerx, self.sub_rect.height*0.5)
         self.buttons: dict[int, RMIButton] = {}
-        self.info_bar = STTInfoBar(20, 60)
+        self.info_bar = STTInfoBar(20, 60, self.global_info_bar)
 
     def draw(self, screen: pygame.Surface):
         # pygame.draw.rect(self.sub_surface, GREY, self.sub_rect)
@@ -104,9 +105,9 @@ class RegisterMouseInputs(MiniGame):
         self.common_drawing(screen)
 
     def update(self):
-        while len(self.buttons) < 1:
+        while len(self.buttons) < 5:
             self.buttons[RMIButton.ID-1] = RMIButton(
-                30, self.handle_clicked_button, self.sub_rect, self.delete_button)
+                10, self.handle_clicked_button, self.sub_rect, self.delete_button)
         for button in copy(self.buttons).values():
             button.update()
 
@@ -116,6 +117,12 @@ class RegisterMouseInputs(MiniGame):
 
             if self.forfeit_button.rect.collidepoint(x, y):
                 self.forfeit_button.click()
+                click_used = True
+
+            if click_used:
+                continue
+
+            if self.info_bar.rect.collidepoint(x,y):
                 click_used = True
 
             if click_used:
@@ -134,17 +141,21 @@ class RegisterMouseInputs(MiniGame):
     def handle_clicked_button(self, button_id):
         button: RMIButton = self.buttons[button_id]
         if button.scam:
-            self.info_bar.subtract_score(3)
+            self.info_bar.subtract_score(5)
         else:
             self.info_bar.add_score(1)
         self.buttons.pop(button_id)
 
     def delete_button(self, button_id):
+        if not self.buttons[button_id].scam:
+            self.info_bar.subtract_score(1)
+
         self.buttons.pop(button_id)
 
 
+
 class MemoryManagement(MiniGame):
-    def __init__(self):
+    def __init__(self, global_info_bar):
         super().__init__()
         self.label1 = self.font.render(
             'Memory Management', True, BLACK, GREY)
@@ -167,7 +178,7 @@ class MemoryManagement(MiniGame):
 
 
 class DefragDisk(MiniGame):
-    def __init__(self):
+    def __init__(self, global_info_bar):
         super().__init__()
         self.label1 = self.font.render(
             'Defrag Disk', True, BLACK, GREY)
@@ -190,7 +201,7 @@ class DefragDisk(MiniGame):
 
 
 class SelectDrivers(MiniGame):
-    def __init__(self):
+    def __init__(self, global_info_bar):
         super().__init__()
         self.label1 = self.font.render(
             'Select Drivers', True, BLACK, GREY)
@@ -213,7 +224,7 @@ class SelectDrivers(MiniGame):
 
 
 class UserAuthentication(MiniGame):
-    def __init__(self):
+    def __init__(self, global_info_bar):
         super().__init__()
         self.label1 = self.font.render(
             'User Authentication', True, BLACK, GREY)
@@ -236,7 +247,7 @@ class UserAuthentication(MiniGame):
 
 
 class FileAccessControl(MiniGame):
-    def __init__(self):
+    def __init__(self, global_info_bar):
         super().__init__()
         self.label1 = self.font.render(
             'File Access Control', True, BLACK, GREY)
@@ -259,7 +270,7 @@ class FileAccessControl(MiniGame):
 
 
 class DataEncryption(MiniGame):
-    def __init__(self):
+    def __init__(self, global_info_bar):
         super().__init__()
         self.label1 = self.font.render(
             'Data Encryption', True, BLACK, GREY)
@@ -282,7 +293,7 @@ class DataEncryption(MiniGame):
 
 
 class DataCompression(MiniGame):
-    def __init__(self):
+    def __init__(self, global_info_bar):
         super().__init__()
         self.label1 = self.font.render(
             'Data Compression', True, BLACK, GREY)

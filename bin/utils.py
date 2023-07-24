@@ -74,22 +74,31 @@ class Image:
 
 class RMIButton:
     ID = 0
-    IMAGE_NAMES = ['download_button',
-                   'play_button',
-                   '4icons']
+    IMAGE_NAMES = ['download',
+                   'play',
+                   'tick',
+                   'cross',
+                   'left',
+                   'right',
+                   'windows',
+                   'apple',
+                   'google']
     OFFSCREEN_OFFSET = 50
 
     def __init__(self, scam_chance, action, screen_rect: pygame.Rect, delete_button):
         self.ID = RMIButton.ID
         RMIButton.ID += 1
         self.screen_rect = screen_rect
-        image_name = 'images\RMI\\' + \
-            random.choice(RMIButton.IMAGE_NAMES) + '.png'
-        self.image = pygame.image.load(image_name)
-        self.image = pygame.transform.smoothscale(self.image, (50, 50))
-        self.rect = self.image.get_rect()
-        self.speed = random.uniform(2, 4)
         self.scam = (random.randint(1, 100) <= scam_chance)
+        if self.scam:
+            image_name = 'images\RMI\scam' + str(random.randint(1, 3)) + '.png'
+        else:
+            image_name = 'images\RMI\\' + \
+                random.choice(RMIButton.IMAGE_NAMES) + '.png'
+        self.image = pygame.image.load(image_name)
+        # self.image = pygame.transform.smoothscale(self.image, (100, 100))
+        self.rect = self.image.get_rect()
+        self.speed = random.uniform(1.8, 3.7)
 
         # Pick random point on perimiter and push offscreen
         position = random.randint(
@@ -111,10 +120,10 @@ class RMIButton:
 
         self.x, self.y = centre_x, centre_y
         self.rect.center = (self.x, self.y)
-        target_coords = (random.randint(round(self.screen_rect.width*0.1), round(self.screen_rect.width*0.9)),
-                         random.randint(round(self.screen_rect.height*0.1), round(self.screen_rect.height*0.9)))
+        self.target_coords = (random.randint(round(self.screen_rect.width*0.1), round(self.screen_rect.width*0.9)),
+                              random.randint(round(self.screen_rect.height*0.1), round(self.screen_rect.height*0.9)))
         self.velocity = pygame.math.Vector2(
-            (target_coords[0]-self.x, target_coords[1]-self.y))
+            (self.target_coords[0]-self.x, self.target_coords[1]-self.y))
         self.velocity.normalize_ip()
         self.velocity *= self.speed
         self.action = action
@@ -123,7 +132,11 @@ class RMIButton:
 
     def draw(self, screen: pygame.Surface):
         if self.scam and DEBUG:
-            pygame.draw.rect(screen, FRUSTRATION_RED, self.rect.inflate(20,20))
+            pygame.draw.rect(screen, FRUSTRATION_RED,
+                             self.rect.inflate(20, 20))
+        if DEBUG:
+            pygame.draw.aaline(
+                screen, BLUE, self.rect.center, self.target_coords)
         screen.blit(self.image, self.rect)
 
     def click(self):
@@ -143,18 +156,19 @@ class RMIButton:
 
 
 class STTInfoBar:  # Score, target, time, info bar
-    def __init__(self, target, time_allowed):
+    def __init__(self, target, time_allowed, global_info_bar):
         self.score = 0
+        self.global_info_bar = global_info_bar
         self.target = target
         self.time_allowed = time_allowed
-        self.start_timestamp = time.time()
+        self.start_timestamp = self.global_info_bar.score
         self.rect = pygame.Rect(
             10, 10, MINIGAME_WIDTH*0.8, MINIGAME_HEIGHT*0.08)
         self.font = pygame.font.SysFont("Arial", 30)
 
     @property
     def time_left(self):
-        return round(self.time_allowed-(time.time()-self.start_timestamp))
+        return self.time_allowed-(self.global_info_bar.score-self.start_timestamp)
 
     def add_score(self, delta):
         self.score += delta
