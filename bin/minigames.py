@@ -43,6 +43,7 @@ class MiniGame:
             self.forfeit_button.draw(self.sub_surface)
 
     def check_forfeit_buttons(self, x, y):
+        click_used = False
         if self.questioning_forfeit:
             if self.confirm_forfeit_button.rect.collidepoint(x, y):
                 self.confirm_forfeit_button.click()
@@ -84,7 +85,7 @@ class MiniGame:
         self.clicks_to_handle = []
         if self.countdown_start_time is None:
             self.countdown_start_time = self.global_info_bar.score
-        if self.global_info_bar.score - self.countdown_start_time >= 3:
+        if self.global_info_bar.score - self.countdown_start_time >= 2:
             self.ready_to_exit = True
 
     def draw_ending_screen(self, screen: pygame.Surface):
@@ -153,15 +154,15 @@ class RegisterMouseInputs(MiniGame):
         if self.info_bar.target <= self.info_bar.score:
             self.running = False
             self.success = True
-            self.message = self.font.render('Target Met!', True, BLACK, GREY)
-            self.message_rect = self.message.get_rect()
-            self.message_rect.center = self.sub_rect.center
+            self.ending_message = self.font.render('Target Met!', True, BLACK, GREY)
+            self.ending_message_rect = self.ending_message.get_rect()
+            self.ending_message_rect.center = self.sub_rect.center
         elif self.info_bar.time_left == 0:
             self.running = False
             self.success = False
-            self.message = self.font.render('Time over!', True, BLACK, GREY)
-            self.message_rect = self.message.get_rect()
-            self.message_rect.center = self.sub_rect.center
+            self.ending_message = self.font.render('Time over!', True, BLACK, GREY)
+            self.ending_message_rect = self.ending_message.get_rect()
+            self.ending_message_rect.center = self.sub_rect.center
 
         while len(self.buttons) < 5:
             self.buttons[RMIButton.ID-1] = RMIButton(
