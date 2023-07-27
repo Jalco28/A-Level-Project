@@ -168,7 +168,7 @@ class STTInfoBar:  # Score, target, time, info bar
 
     @property
     def time_left(self):
-        return self.time_allowed-(self.global_info_bar.score-self.start_timestamp)
+        return max(self.time_allowed-(self.global_info_bar.score-self.start_timestamp), 0)
 
     def add_score(self, delta):
         self.score += delta

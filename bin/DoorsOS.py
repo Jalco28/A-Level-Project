@@ -367,7 +367,7 @@ class DoorsOS:
         self.info_bar = InfoBar(self.mode, self.difficulty)
         self.task_list = TaskList()
         self.frustration_bar = FrustrationBar()
-        self.current_mini_game = minigames.EmptyMiniGame()
+        self.current_mini_game = minigames.EmptyMiniGame(self.info_bar)
         self.panels: list[InfoBar | FrustrationBar
                           | TaskList | minigames.MiniGame | Button] = [self.info_bar,
                                                                        self.current_mini_game, self.frustration_bar, self.task_list]
@@ -426,7 +426,7 @@ class DoorsOS:
         for panel in self.panels:
             panel.update()
 
-        if self.current_mini_game.finished:
+        if self.current_mini_game.ready_to_exit:
             if self.current_mini_game.success:
                 self.frustration_bar.frustration_level -= 10
             else:
