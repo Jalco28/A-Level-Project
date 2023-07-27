@@ -1,7 +1,6 @@
 from constants import *
 import pygame
 import random
-import time
 
 
 class Button:
@@ -166,6 +165,25 @@ class STTInfoBar:  # Score, target, time, info bar
             10, 10, MINIGAME_WIDTH*0.8, MINIGAME_HEIGHT*0.08)
         self.font = pygame.font.SysFont("Arial", 30)
 
+        score_text = self.font.render(
+            f'Score: {self.score}', True,  BLACK, GREY)
+        target_text = self.font.render(
+            f'Target: {self.target}', True, BLACK, GREY)
+        time_text = self.font.render(
+            f'Time Remaining: {self.time_left}', True, BLACK, GREY)
+
+        self.score_rect = score_text.get_rect()
+        self.score_rect.center = (
+            self.rect.left+self.rect.width*0.25, self.rect.centery)
+
+        self.target_rect = target_text.get_rect()
+        self.target_rect.center = (
+            self.rect.left+self.rect.width*0.5, self.rect.centery)
+
+        self.time_rect = time_text.get_rect()
+        self.time_rect.center = (
+            self.rect.left+self.rect.width*0.75, self.rect.centery)
+
     @property
     def time_left(self):
         return max(self.time_allowed-(self.global_info_bar.score-self.start_timestamp), 0)
@@ -187,21 +205,6 @@ class STTInfoBar:  # Score, target, time, info bar
         time_text = self.font.render(
             f'Time Remaining: {self.time_left}', True, BLACK, GREY)
 
-        score_rect = pygame.Rect(
-            0, 0, score_text.get_width(), score_text.get_height())
-        score_rect.midleft = (
-            self.rect.left+self.rect.width*0.15, self.rect.centery)
-
-        target_rect = pygame.Rect(
-            0, 0, target_text.get_width(), target_text.get_height())
-        target_rect.center = (
-            self.rect.left+self.rect.width*0.5, self.rect.centery)
-
-        time_rect = pygame.Rect(
-            0, 0, time_text.get_width(), time_text.get_height())
-        time_rect.midleft = (
-            self.rect.left+self.rect.width*0.7, self.rect.centery)
-
-        screen.blit(score_text, score_rect)
-        screen.blit(target_text, target_rect)
-        screen.blit(time_text, time_rect)
+        screen.blit(score_text, self.score_rect)
+        screen.blit(target_text, self.target_rect)
+        screen.blit(time_text, self.time_rect)

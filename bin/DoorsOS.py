@@ -25,6 +25,28 @@ class InfoBar:
         else:
             self.difficulty_level = 10
 
+        mode_text = self.font.render(
+            self.mode_text, True,  BLACK, GREY)
+        score_text = self.font.render(
+            f'Score: {self.score}', True, BLACK, GREY)
+        difficulty_text = self.font.render(
+            f'Difficulty Level: {self.difficulty_level}', True, BLACK, GREY)
+
+        self.mode_rect = pygame.Rect(
+            0, 0, mode_text.get_width(), mode_text.get_height())
+        self.mode_rect.midleft = (self.rect.left+0.02 *
+                             self.rect.width, self.rect.centery)
+
+        self.score_rect = pygame.Rect(
+            0, 0, score_text.get_width(), score_text.get_height())
+        self.score_rect.midleft = (self.rect.left+0.4 *
+                              self.rect.width, self.rect.centery)
+
+        self.difficulty_rect = pygame.Rect(
+            0, 0, difficulty_text.get_width(), difficulty_text.get_height())
+        self.difficulty_rect.midleft = (
+            self.rect.left+0.7*self.rect.width, self.rect.centery)
+
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
         pygame.draw.rect(screen, BLACK, self.rect, 5, 2)
@@ -36,24 +58,9 @@ class InfoBar:
         difficulty_text = self.font.render(
             f'Difficulty Level: {self.difficulty_level}', True, BLACK, GREY)
 
-        mode_rect = pygame.Rect(
-            0, 0, mode_text.get_width(), mode_text.get_height())
-        mode_rect.midleft = (self.rect.left+0.02 *
-                             self.rect.width, self.rect.centery)
-
-        score_rect = pygame.Rect(
-            0, 0, score_text.get_width(), score_text.get_height())
-        score_rect.midleft = (self.rect.left+0.4 *
-                              self.rect.width, self.rect.centery)
-
-        difficulty_rect = pygame.Rect(
-            0, 0, difficulty_text.get_width(), difficulty_text.get_height())
-        difficulty_rect.midleft = (
-            self.rect.left+0.7*self.rect.width, self.rect.centery)
-
-        screen.blit(mode_text, mode_rect)
-        screen.blit(score_text, score_rect)
-        screen.blit(difficulty_text, difficulty_rect)
+        screen.blit(mode_text, self.mode_rect)
+        screen.blit(score_text, self.score_rect)
+        screen.blit(difficulty_text, self.difficulty_rect)
 
     def update(self):
         time_paused = self.get_time_paused()
@@ -79,6 +86,12 @@ class FrustrationBar:
         self.FONT_SIZE = 30
         self.font = pygame.font.SysFont("Arial", self.FONT_SIZE)
 
+
+        self.label = self.font.render('User Frustration', True, BLACK, WHITE)
+        self.label = pygame.transform.rotate(self.label, 270)
+        self.text_rect = pygame.Rect(0, 0, self.label.get_width(), self.label.get_height())
+        self.text_rect.center = (self.rect.centerx+63, self.rect.centery)
+
     def draw(self, screen: pygame.Surface):
         red_rect = pygame.Rect(self.rect.left, 0, self.WIDTH,
                                self.HEIGHT*0.01*self.frustration_level)
@@ -92,11 +105,7 @@ class FrustrationBar:
             pygame.draw.line(screen, BLACK, (self.rect.left,
                              dash_height), (self.rect.left+20, dash_height), 4)
 
-        label = self.font.render('User Frustration', True, BLACK, WHITE)
-        label = pygame.transform.rotate(label, 270)
-        text_rect = pygame.Rect(0, 0, label.get_width(), label.get_height())
-        text_rect.center = (self.rect.centerx+63, self.rect.centery)
-        screen.blit(label, text_rect)
+        screen.blit(self.label, self.text_rect)
 
     def update(self):
         self.frustration_level = self.frustration_level % 101
