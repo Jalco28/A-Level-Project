@@ -1,16 +1,18 @@
+from copy import copy
 from constants import *
 import pygame
 import random
+from math import cos, radians, sin
 
 
 class Button:
-    def __init__(self, text, centre_x, centre_y, border_colour, background_colour, font_size, action):
+    def __init__(self, text, center_x, center_y, border_colour, background_colour, font_size, action):
         self.font = pygame.font.SysFont('Arial', font_size)
         self.text = text
         self.rendered_text = self.font.render(self.text, True, BLACK)
         self.rect = pygame.Rect(
             0, 0, self.rendered_text.get_width()*1.1, self.rendered_text.get_height()*1.2)
-        self.rect.center = (centre_x, centre_y)
+        self.rect.center = (center_x, center_y)
         self.text_rect = pygame.Rect(
             0, 0, self.rendered_text.get_width(), self.rendered_text.get_height())
         self.text_rect.center = self.rect.center
@@ -55,11 +57,15 @@ class ToggleButton(Button):
 
 
 class Image:
-    def __init__(self, centre_x, centre_y, image_name, action):
+    def __init__(self, center_x, center_y, image_name, scale=1):
         self.image = pygame.image.load(image_name)
-        self.rect = self.image.get_rect()
-        self.rect.center = (centre_x, centre_y)
-        self.action = action
+        self.grabbed = False
+        ########################
+        if scale != 1:
+            self.image = pygame.transform.smoothscale(
+                self.image, (scale*self.image.get_width(), scale*self.image.get_height()))
+        ########################
+        self.rect = self.image.get_rect(center=(center_x, center_y))
 
     def draw(self, screen: pygame.Surface):
         screen.blit(self.image, self.rect)
@@ -67,8 +73,58 @@ class Image:
     def update(self):
         pass
 
-    def click(self):
-        self.action()
+
+class STTInfoBar:  # Score, target, time, info bar
+    def __init__(self, target, time_allowed, global_info_bar):
+        self.score = 0
+        self.global_info_bar = global_info_bar
+        self.target = target
+        self.time_allowed = time_allowed
+        self.start_timestamp = self.global_info_bar.score
+        self.rect = pygame.Rect(
+            10, 10, MINIGAME_WIDTH*0.8, MINIGAME_HEIGHT*0.08)
+        self.font = pygame.font.SysFont("Arial", 30)
+
+        score_text = self.font.render(
+            f'Score: {self.score}', True,  BLACK, GREY)
+        target_text = self.font.render(
+            f'Target: {self.target}', True, BLACK, GREY)
+        time_text = self.font.render(
+            f'Time Remaining: {self.time_left}', True, BLACK, GREY)
+
+        self.score_rect = score_text.get_rect(
+            center=(self.rect.left+self.rect.width*0.25, self.rect.centery))
+
+        self.target_rect = target_text.get_rect(
+            center=(self.rect.left+self.rect.width*0.5, self.rect.centery))
+
+        self.time_rect = time_text.get_rect(
+            center=(self.rect.left+self.rect.width*0.75, self.rect.centery))
+
+    @property
+    def time_left(self):
+        return max(self.time_allowed-(self.global_info_bar.score-self.start_timestamp), 0)
+
+    def add_score(self, delta):
+        self.score += delta
+
+    def subtract_score(self, delta):
+        self.score -= delta
+
+    def draw(self, screen: pygame.Surface):
+        pygame.draw.rect(screen, GREY, self.rect)
+        pygame.draw.rect(screen, BLACK, self.rect, 3, 2)
+
+        score_text = self.font.render(
+            f'Score: {self.score}', True,  BLACK, GREY)
+        target_text = self.font.render(
+            f'Target: {self.target}', True, BLACK, GREY)
+        time_text = self.font.render(
+            f'Time Remaining: {self.time_left}', True, BLACK, GREY)
+
+        screen.blit(score_text, self.score_rect)
+        screen.blit(target_text, self.target_rect)
+        screen.blit(time_text, self.time_rect)
 
 
 class RMIButton:
@@ -96,29 +152,28 @@ class RMIButton:
                 random.choice(RMIButton.IMAGE_NAMES) + '.png'
         self.image = pygame.image.load(image_name)
         # self.image = pygame.transform.smoothscale(self.image, (100, 100))
-        self.rect = self.image.get_rect()
         self.speed = random.uniform(1.8, 3.7)
 
         # Pick random point on perimiter and push offscreen
         position = random.randint(
             0, 2*self.screen_rect.width+2*self.screen_rect.height)
         if 0 <= position <= self.screen_rect.width:  # Top Edge
-            centre_x = position
-            centre_y = -RMIButton.OFFSCREEN_OFFSET
+            center_x = position
+            center_y = -RMIButton.OFFSCREEN_OFFSET
         elif self.screen_rect.width < position <= self.screen_rect.width+self.screen_rect.height:  # Right Edge
-            centre_x = self.screen_rect.right+RMIButton.OFFSCREEN_OFFSET
-            centre_y = position-self.screen_rect.width
+            center_x = self.screen_rect.right+RMIButton.OFFSCREEN_OFFSET
+            center_y = position-self.screen_rect.width
         elif self.screen_rect.width+self.screen_rect.height < position <= 2*self.screen_rect.width+self.screen_rect.height:  # Bottom Edge
-            centre_x = self.screen_rect.right - \
+            center_x = self.screen_rect.right - \
                 (position-self.screen_rect.width-self.screen_rect.height)
-            centre_y = self.screen_rect.bottom+RMIButton.OFFSCREEN_OFFSET
+            center_y = self.screen_rect.bottom+RMIButton.OFFSCREEN_OFFSET
         elif 2*self.screen_rect.width+self.screen_rect.height < position <= 2*self.screen_rect.width+2*self.screen_rect.height:  # Left Edge
-            centre_x = -RMIButton.OFFSCREEN_OFFSET
-            centre_y = self.screen_rect.bottom - \
+            center_x = -RMIButton.OFFSCREEN_OFFSET
+            center_y = self.screen_rect.bottom - \
                 (position-2*self.screen_rect.width-self.screen_rect.height)
 
-        self.x, self.y = centre_x, centre_y
-        self.rect.center = (self.x, self.y)
+        self.x, self.y = center_x, center_y
+        self.rect = self.image.get_rect(center=(self.x, self.y))
         self.target_coords = (random.randint(round(self.screen_rect.width*0.1), round(self.screen_rect.width*0.9)),
                               random.randint(round(self.screen_rect.height*0.1), round(self.screen_rect.height*0.9)))
         self.velocity = pygame.math.Vector2(
@@ -154,57 +209,21 @@ class RMIButton:
             self.delete_button(self.ID)
 
 
-class STTInfoBar:  # Score, target, time, info bar
-    def __init__(self, target, time_allowed, global_info_bar):
-        self.score = 0
-        self.global_info_bar = global_info_bar
-        self.target = target
-        self.time_allowed = time_allowed
-        self.start_timestamp = self.global_info_bar.score
-        self.rect = pygame.Rect(
-            10, 10, MINIGAME_WIDTH*0.8, MINIGAME_HEIGHT*0.08)
-        self.font = pygame.font.SysFont("Arial", 30)
+class MMBin:
+    def __init__(self, center_x, center_y, score):
+        self.score = score
+        self.back_image = pygame.image.load(r'images\MM\full_bin.png')
+        self.front_image = pygame.image.load(r'images\MM\front_bin.png')
 
-        score_text = self.font.render(
-            f'Score: {self.score}', True,  BLACK, GREY)
-        target_text = self.font.render(
-            f'Target: {self.target}', True, BLACK, GREY)
-        time_text = self.font.render(
-            f'Time Remaining: {self.time_left}', True, BLACK, GREY)
+        self.rect = self.back_image.get_rect(center=(center_x, center_y))
 
-        self.score_rect = score_text.get_rect()
-        self.score_rect.center = (
-            self.rect.left+self.rect.width*0.25, self.rect.centery)
+    def draw_back(self, screen: pygame.Surface):
+        screen.blit(self.back_image, self.rect)
 
-        self.target_rect = target_text.get_rect()
-        self.target_rect.center = (
-            self.rect.left+self.rect.width*0.5, self.rect.centery)
-
-        self.time_rect = time_text.get_rect()
-        self.time_rect.center = (
-            self.rect.left+self.rect.width*0.75, self.rect.centery)
-
-    @property
-    def time_left(self):
-        return max(self.time_allowed-(self.global_info_bar.score-self.start_timestamp), 0)
-
-    def add_score(self, delta):
-        self.score += delta
-
-    def subtract_score(self, delta):
-        self.score -= delta
-
-    def draw(self, screen: pygame.Surface):
-        pygame.draw.rect(screen, GREY, self.rect)
-        pygame.draw.rect(screen, BLACK, self.rect, 3, 2)
-
-        score_text = self.font.render(
-            f'Score: {self.score}', True,  BLACK, GREY)
-        target_text = self.font.render(
-            f'Target: {self.target}', True, BLACK, GREY)
-        time_text = self.font.render(
-            f'Time Remaining: {self.time_left}', True, BLACK, GREY)
-
-        screen.blit(score_text, self.score_rect)
-        screen.blit(target_text, self.target_rect)
-        screen.blit(time_text, self.time_rect)
+    def draw_front(self, screen: pygame.Surface):
+        # screen.blit(self.front_image, self.rect)
+        pygame.draw.aalines(screen, RED, False, [
+                            self.rect.topleft,
+                            self.rect.bottomleft,
+                            self.rect.bottomright,
+                            self.rect.topright])
