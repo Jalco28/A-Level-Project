@@ -221,9 +221,10 @@ class MMBin:
         screen.blit(self.back_image, self.rect)
 
     def draw_front(self, screen: pygame.Surface):
-        # screen.blit(self.front_image, self.rect)
-        pygame.draw.aalines(screen, RED, False, [
-                            self.rect.topleft,
-                            self.rect.bottomleft,
-                            self.rect.bottomright,
-                            self.rect.topright])
+        screen.blit(self.front_image, self.rect)
+        if DEBUG:
+            pygame.draw.aalines(screen, RED, False, [
+                                self.rect.topleft,
+                                self.rect.bottomleft,
+                                self.rect.bottomright,
+                                self.rect.topright])

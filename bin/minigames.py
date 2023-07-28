@@ -219,7 +219,7 @@ class MemoryManagement(MiniGame):
 
         self.info_bar = STTInfoBar(50, 20, self.global_info_bar)
         self.ram = Image(220, 160, r'images\MM\RAM.png')
-        self.bin = MMBin(MINIGAME_WIDTH*0.5, MINIGAME_HEIGHT*0.5, 0, 12)
+        self.bin = MMBin(MINIGAME_WIDTH*0.5, MINIGAME_HEIGHT*0.5, 12)
         self.garbage = Image(0, 0, r'images\MM\garbage.png')
 
     def draw(self, screen: pygame.Surface):
@@ -239,6 +239,10 @@ class MemoryManagement(MiniGame):
     def update(self):
         if not self.running:
             return self.update_ending_sequence()
+
+        self.garbage.rect.center = MiniGame.translate_coords(
+            *pygame.mouse.get_pos())
+
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
             click_used = False
