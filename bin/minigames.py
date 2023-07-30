@@ -218,9 +218,9 @@ class MemoryManagement(MiniGame):
         super().__init__(global_info_bar)
 
         self.info_bar = STTInfoBar(50, 20, self.global_info_bar)
-        self.ram = Image(220, 160, r'images\MM\RAM.png')
-        self.bin = MMBin(MINIGAME_WIDTH*0.5, MINIGAME_HEIGHT*0.5, 12)
-        self.garbage = Image(0, 0, r'images\MM\garbage.png')
+        self.setup_bins()
+        self.setup_walls()
+        self.garbage_dict: dict[int, MMGarbage] = {}
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
@@ -228,11 +228,13 @@ class MemoryManagement(MiniGame):
 
         self.sub_surface.fill(WHITE)
 
-        self.bin.draw_back(self.sub_surface)
-        self.garbage.draw(self.sub_surface)
-        self.bin.draw_front(self.sub_surface)
+        self.draw_bin_backs(self.sub_surface)
+        self.draw_garbage(self.sub_surface)
+        self.draw_bin_fronts(self.sub_surface)
+        self.draw_walls(self.sub_surface)
+        pygame.draw.line(self.sub_surface, RED, self.sub_rect.midleft,
+                         (self.sub_rect.left+300, self.sub_rect.centery))
 
-        self.ram.draw(self.sub_surface)
         self.info_bar.draw(self.sub_surface)
         self.common_drawing(screen)
 
@@ -240,8 +242,11 @@ class MemoryManagement(MiniGame):
         if not self.running:
             return self.update_ending_sequence()
 
-        self.garbage.rect.center = MiniGame.translate_coords(
-            *pygame.mouse.get_pos())
+        # self.garbage_dict[0].pos = MiniGame.translate_coords(
+        #     *pygame.mouse.get_pos())
+
+        for garbage in copy(self.garbage_dict).values():
+            garbage.update()
 
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
@@ -251,6 +256,62 @@ class MemoryManagement(MiniGame):
                 x, y) or self.check_info_bar_clicked(x, y)
             if click_used:
                 continue
+
+        self.add_garbage()
+
+    def setup_bins(self):
+        scores = [10, 20, 30, 40, 30, 20, 10, 50]
+        self.bins: list[MMBin] = []
+        for i in range(8):
+            bin = MMBin(460+98*i, MINIGAME_HEIGHT*0.902, scores.pop(0))
+            self.bins.append(bin)
+
+    def draw_bin_backs(self, screen):
+        for bin in self.bins:
+            bin.draw_back(screen)
+
+    def draw_bin_fronts(self, screen):
+        for bin in self.bins:
+            bin.draw_front(screen)
+
+    def draw_garbage(self, screen):
+        for garbage in self.garbage_dict.values():
+            garbage.draw(screen)
+
+    def draw_walls(self, screen):
+        for wall in self.walls:
+            wall.draw(screen)
+
+    def add_garbage(self):
+        self.garbage_dict[MMGarbage.ID -
+                          1] = MMGarbage(self.sub_rect.left+300, self.sub_rect.centery, self.delete_garbage, self.walls)
+
+    def delete_garbage(self, ID):
+        garbage = self.garbage_dict[ID]
+        for bin in self.bins:
+            if garbage.rect.right == bin.back_wall_edge:
+                self.info_bar.add_score(bin.score)
+                break
+        self.garbage_dict.pop(ID)
+
+    def setup_walls(self):
+        self.walls: list[MMWall] = [
+            MMWall(self.bins[0].back_wall_edge, 100),
+            MMWall(self.bins[0].back_wall_edge, 350),
+            MMWall(self.bins[0].back_wall_edge, 530),
+            MMWall(self.bins[1].back_wall_edge, 560),
+            MMWall(self.bins[1].back_wall_edge, 200),
+            MMWall(self.bins[2].back_wall_edge, 300),
+            MMWall(self.bins[2].back_wall_edge, 120),
+            MMWall(self.bins[3].back_wall_edge, 500),
+            MMWall(self.bins[4].back_wall_edge, 420),
+            MMWall(self.bins[4].back_wall_edge, 320),
+            MMWall(self.bins[5].back_wall_edge, 100),
+            MMWall(self.bins[5].back_wall_edge, 530),
+            MMWall(self.bins[6].back_wall_edge, 250),
+            MMWall(self.bins[6].back_wall_edge, 450),
+            MMWall(self.bins[7].back_wall_edge, 350)
+        ]
 
 
 class DefragDisk(MiniGame):

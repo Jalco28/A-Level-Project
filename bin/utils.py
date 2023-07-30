@@ -1,8 +1,6 @@
-from copy import copy
 from constants import *
 import pygame
 import random
-from math import cos, radians, sin
 
 
 class Button:
@@ -59,7 +57,6 @@ class ToggleButton(Button):
 class Image:
     def __init__(self, center_x, center_y, image_name, scale=1):
         self.image = pygame.image.load(image_name)
-        self.grabbed = False
         ########################
         if scale != 1:
             self.image = pygame.transform.smoothscale(
@@ -214,17 +211,77 @@ class MMBin:
         self.score = score
         self.back_image = pygame.image.load(r'images\MM\full_bin.png')
         self.front_image = pygame.image.load(r'images\MM\front_bin.png')
-
+        self.font = pygame.font.SysFont('Arial', 20)
+        self.score_text = self.font.render(str(self.score), True, WHITE)
         self.rect = self.back_image.get_rect(center=(center_x, center_y))
+        self.back_wall_edge = self.rect.right-14
 
     def draw_back(self, screen: pygame.Surface):
         screen.blit(self.back_image, self.rect)
 
     def draw_front(self, screen: pygame.Surface):
         screen.blit(self.front_image, self.rect)
+        screen.blit(self.score_text, (self.rect.centerx-8, self.rect.top+20))
         if DEBUG:
-            pygame.draw.aalines(screen, RED, False, [
-                                self.rect.topleft,
-                                self.rect.bottomleft,
-                                self.rect.bottomright,
-                                self.rect.topright])
+            # pygame.draw.aalines(screen, RED, False, [
+            #                     self.rect.topleft,
+            #                     self.rect.bottomleft,
+            #                     self.rect.bottomright,
+            #                     self.rect.topright])
+            pygame.draw.line(screen, RED, (self.back_wall_edge,
+                             MINIGAME_HEIGHT), (self.back_wall_edge, 0))
+
+
+class MMGarbage:
+    ID = 0
+
+    def __init__(self, center_x, center_y, delete_garbage, walls):
+        self.image = pygame.image.load(r'images\MM\garbage.png')
+
+        self.velocity = pygame.math.Vector2(random.randint(5,30), -random.randint(10,30))
+        self.pos = pygame.math.Vector2(center_x, center_y)
+        self.update_rect()
+        self.freefall = True
+        self.walls: list[MMWall] = walls
+        self.delete_garbage = delete_garbage
+        self.ID = MMGarbage.ID
+        MMGarbage.ID += 1
+
+
+    def update_rect(self):
+        self.rect = self.image.get_rect(center=self.pos)
+
+    def draw(self, screen: pygame.Surface):
+        screen.blit(self.image, self.rect)
+
+    def update(self):
+        if self.freefall:
+            self.velocity.y += MM_GRAVITY
+            self.pos.x += self.velocity.x
+            self.pos.y += self.velocity.y
+        self.update_rect()
+
+        COLLISSION_TOLERANCE = 0
+        for wall in self.walls:
+            if self.rect.colliderect(wall.rect):
+                if abs(self.rect.bottom-wall.rect.top) <= COLLISSION_TOLERANCE and self.velocity.y > 0:
+                    self.velocity.y *= -1
+                elif abs(self.rect.top-wall.rect.bottom) <= COLLISSION_TOLERANCE and self.velocity.y < 0:
+                    self.velocity.y *= -1
+                else:
+                    self.velocity.x = 0
+                    self.rect.right = wall.rect.left
+                    self.pos.x = self.rect.centerx
+
+
+
+        if self.rect.y > 725:
+            self.delete_garbage(self.ID)
+
+
+class MMWall:
+    def __init__(self, top, left):
+        self.rect = pygame.Rect(top, left, 10, 70)
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, BLACK, self.rect)
