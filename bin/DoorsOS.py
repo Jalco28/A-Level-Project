@@ -394,13 +394,13 @@ class DoorsOS:
                 if event.type == pygame.QUIT:
                     self.end_game(True)
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.send_click_to_panel(event)
                     if event.button == 3:
                         self.task_list.add_task()
 
-                if event.type == pygame.KEYDOWN:
+                elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         escape_exit_code = self.pause_game()
                         if escape_exit_code == pygame.QUIT:
@@ -409,8 +409,12 @@ class DoorsOS:
                             self.info_bar.paused_intervals.append(
                                 escape_exit_code)
 
-                if event.type == pygame.MOUSEWHEEL:
+                elif event.type == pygame.MOUSEWHEEL:
                     self.frustration_bar.frustration_level += event.y
+
+                else:
+                    self.current_mini_game.take_event(event)
+
 
             if not self.game_running:
                 break

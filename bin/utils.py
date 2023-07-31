@@ -59,11 +59,9 @@ class ToggleButton(Button):
 class Image:
     def __init__(self, center_x, center_y, image_name, scale=1):
         self.image = pygame.image.load(image_name)
-        ########################
         if scale != 1:
             self.image = pygame.transform.smoothscale(
                 self.image, (scale*self.image.get_width(), scale*self.image.get_height()))
-        ########################
         self.rect = self.image.get_rect(center=(center_x, center_y))
 
     def draw(self, screen: pygame.Surface):
@@ -240,17 +238,18 @@ class MMBin:
 
 class MMGarbage:
     ID = 0
+    HOME_POS = (240, MINIGAME_HEIGHT*0.41)
 
-    def __init__(self, center_x, center_y, delete_garbage, walls):
+    def __init__(self, delete_garbage, walls):
         self.image = pygame.image.load(r'images\MM\garbage.png')
 
-        self.velocity = pygame.math.Vector2(
-            random.randint(5, 30), -random.randint(10, 30))
-        self.pos = pygame.math.Vector2(center_x, center_y)
+        self.velocity = pygame.math.Vector2()
+        self.pos = pygame.math.Vector2(MMGarbage.HOME_POS)
         self.update_rect()
-        self.freefall = True
         self.walls: list[MMWall] = walls
         self.delete_garbage = delete_garbage
+        self.freefall = False
+        self.grabbed = False
         self.ID = MMGarbage.ID
         MMGarbage.ID += 1
 
@@ -258,7 +257,13 @@ class MMGarbage:
         self.rect = self.image.get_rect(center=self.pos)
 
     def draw(self, screen: pygame.Surface):
+        if not self.freefall:
+            pygame.draw.line(screen, BLACK, (self.rect.right-10, self.rect.centery),
+                             (250, MINIGAME_HEIGHT*0.405), 5)
         screen.blit(self.image, self.rect)
+        if not self.freefall:
+            pygame.draw.line(screen, BLACK, (self.rect.left+2, self.rect.centery),
+                             (230, MINIGAME_HEIGHT*0.395), 5)
 
     def update(self):
         if self.freefall:
@@ -281,6 +286,29 @@ class MMGarbage:
 
         if self.rect.y > 725:
             self.delete_garbage(self.ID)
+
+    def drag(self, mouse_x, mouse_y):
+        mouse_vector = pygame.math.Vector2(mouse_x, mouse_y)
+        displacement_from_home = pygame.math.Vector2(
+            MMGarbage.HOME_POS) - mouse_vector
+        if displacement_from_home.magnitude() < 170:
+            self.pos = mouse_vector
+            self.update_rect()
+        else:
+            self.pos = pygame.math.Vector2(MMGarbage.HOME_POS) + displacement_from_home.normalize()*-170
+            self.update_rect()
+    def throw(self):
+        """Returns if garbage was actually thrown"""
+        self.grabbed = False
+        displacement_from_home = pygame.math.Vector2(
+            MMGarbage.HOME_POS) - self.pos
+        if displacement_from_home.magnitude() > 50:
+            self.velocity = 0.3*displacement_from_home
+            self.freefall = True
+            return True
+        else:
+            self.pos = pygame.math.Vector2(MMGarbage.HOME_POS)
+            return False
 
 
 class MMWall:

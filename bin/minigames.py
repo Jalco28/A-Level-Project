@@ -7,6 +7,7 @@ from copy import copy
 class MiniGame:
     @classmethod
     def translate_coords(cls, x, y):
+        """Converts whole screen coords to coords within sub_rect"""
         return x-5, y-(SCREEN_HEIGHT*0.13)
 
     def __init__(self, global_info_bar):
@@ -117,6 +118,9 @@ class MiniGame:
             self.ending_message_rect = self.ending_message.get_rect(
                 center=self.sub_rect.center)
 
+    def take_event(self, event):
+        pass
+
 
 class EmptyMiniGame(MiniGame):
     def __init__(self, global_info_bar):
@@ -218,9 +222,18 @@ class MemoryManagement(MiniGame):
         super().__init__(global_info_bar)
 
         self.info_bar = STTInfoBar(50, 20, self.global_info_bar)
+        self.catapult_back = Image(240, MINIGAME_HEIGHT*0.46,
+                                   r'images\MM\catapult_back.png')
+        self.catapult_front = Image(240, MINIGAME_HEIGHT*0.46,
+                                    r'images\MM\catapult_front.png')
         self.setup_bins()
         self.setup_walls()
         self.garbage_dict: dict[int, MMGarbage] = {}
+        self.add_garbage()
+
+    @property
+    def catapult_garbage(self):
+        return self.garbage_dict[self.catapult_garbage_ID]
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
@@ -228,12 +241,14 @@ class MemoryManagement(MiniGame):
 
         self.sub_surface.fill(WHITE)
 
+        pygame.draw.rect(self.sub_surface, BLACK, pygame.Rect(
+            0, MINIGAME_HEIGHT*0.55, 250, 10), 0, 2)
         self.draw_bin_backs(self.sub_surface)
+        self.catapult_back.draw(self.sub_surface)
         self.draw_garbage(self.sub_surface)
         self.draw_bin_fronts(self.sub_surface)
+        self.catapult_front.draw(self.sub_surface)
         self.draw_walls(self.sub_surface)
-        pygame.draw.line(self.sub_surface, RED, self.sub_rect.midleft,
-                         (self.sub_rect.left+300, self.sub_rect.centery))
 
         self.info_bar.draw(self.sub_surface)
         self.common_drawing(screen)
@@ -257,7 +272,11 @@ class MemoryManagement(MiniGame):
             if click_used:
                 continue
 
-            self.add_garbage()
+            if self.catapult_garbage.rect.collidepoint(x, y):
+                self.catapult_garbage.grabbed = True
+                click_used = True
+            if click_used:
+                continue
 
     def setup_bins(self):
         scores = [10, 20, 30, 40, 30, 20, 10, 50]
@@ -284,7 +303,8 @@ class MemoryManagement(MiniGame):
 
     def add_garbage(self):
         self.garbage_dict[MMGarbage.ID -
-                          1] = MMGarbage(self.sub_rect.left+300, self.sub_rect.centery, self.delete_garbage, self.walls)
+                          1] = MMGarbage(self.delete_garbage, self.walls)
+        self.catapult_garbage_ID = MMGarbage.ID - 1
 
     def delete_garbage(self, ID):
         garbage = self.garbage_dict[ID]
@@ -307,6 +327,20 @@ class MemoryManagement(MiniGame):
             MMWall(self.bins[6].back_wall_edge),
             MMWall(self.bins[7].back_wall_edge)
         ]
+
+    def take_event(self, event: pygame.event.Event):
+        if event.type == pygame.MOUSEMOTION:
+            if self.catapult_garbage.grabbed:
+                self.catapult_garbage.drag(*MiniGame.translate_coords(*event.pos))
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                if self.catapult_garbage.grabbed:
+                    garbage_thrown = self.catapult_garbage.throw()
+                    if garbage_thrown:
+                        self.add_garbage()
+                        # pass
+
 
 
 class DefragDisk(MiniGame):
