@@ -1,6 +1,8 @@
+import time
 from constants import *
 import pygame
 import random
+from math import radians, sin
 
 
 class Button:
@@ -100,7 +102,7 @@ class STTInfoBar:  # Score, target, time, info bar
 
     @property
     def time_left(self):
-        return max(self.time_allowed-(self.global_info_bar.score-self.start_timestamp), 0)
+        return max(int(self.time_allowed-(self.global_info_bar.score-self.start_timestamp)), 0)
 
     def add_score(self, delta):
         self.score += delta
@@ -216,7 +218,11 @@ class MMBin:
         self.rect = self.back_image.get_rect(center=(center_x, center_y))
         self.back_wall_edge = self.rect.right-14
 
+        self.highlight_start_time = 0
+
     def draw_back(self, screen: pygame.Surface):
+        if DEBUG and time.time()-self.highlight_start_time < 2:
+            pygame.draw.rect(screen, GREEN, self.rect.inflate(20, 20))
         screen.blit(self.back_image, self.rect)
 
     def draw_front(self, screen: pygame.Surface):
@@ -238,7 +244,8 @@ class MMGarbage:
     def __init__(self, center_x, center_y, delete_garbage, walls):
         self.image = pygame.image.load(r'images\MM\garbage.png')
 
-        self.velocity = pygame.math.Vector2(random.randint(5,30), -random.randint(10,30))
+        self.velocity = pygame.math.Vector2(
+            random.randint(5, 30), -random.randint(10, 30))
         self.pos = pygame.math.Vector2(center_x, center_y)
         self.update_rect()
         self.freefall = True
@@ -246,7 +253,6 @@ class MMGarbage:
         self.delete_garbage = delete_garbage
         self.ID = MMGarbage.ID
         MMGarbage.ID += 1
-
 
     def update_rect(self):
         self.rect = self.image.get_rect(center=self.pos)
@@ -273,15 +279,23 @@ class MMGarbage:
                     self.rect.right = wall.rect.left
                     self.pos.x = self.rect.centerx
 
-
-
         if self.rect.y > 725:
             self.delete_garbage(self.ID)
 
 
 class MMWall:
-    def __init__(self, top, left):
-        self.rect = pygame.Rect(top, left, 10, 70)
+    def __init__(self, left):
+        self.rect = pygame.Rect(left, 0, 10, 70)
+        self.time = random.randint(0, 359)
+        self.speed = random.uniform(0.3, 2)
+        self.update()
 
     def draw(self, screen):
         pygame.draw.rect(screen, BLACK, self.rect)
+
+    def update(self):
+        self.rect.top = 0.4*MINIGAME_HEIGHT + \
+            sin(self.speed*radians(self.time))*200
+        self.time += 1
+        if self.time >= 360/self.speed:
+            self.time = 0

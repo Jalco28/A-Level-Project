@@ -242,8 +242,8 @@ class MemoryManagement(MiniGame):
         if not self.running:
             return self.update_ending_sequence()
 
-        # self.garbage_dict[0].pos = MiniGame.translate_coords(
-        #     *pygame.mouse.get_pos())
+        for wall in self.walls:
+            wall.update()
 
         for garbage in copy(self.garbage_dict).values():
             garbage.update()
@@ -257,7 +257,7 @@ class MemoryManagement(MiniGame):
             if click_used:
                 continue
 
-        self.add_garbage()
+            self.add_garbage()
 
     def setup_bins(self):
         scores = [10, 20, 30, 40, 30, 20, 10, 50]
@@ -289,28 +289,23 @@ class MemoryManagement(MiniGame):
     def delete_garbage(self, ID):
         garbage = self.garbage_dict[ID]
         for bin in self.bins:
-            if garbage.rect.right == bin.back_wall_edge:
+            if abs(garbage.rect.right - bin.back_wall_edge) <= 5:
                 self.info_bar.add_score(bin.score)
+                if DEBUG:
+                    bin.highlight_start_time = time.time()
                 break
         self.garbage_dict.pop(ID)
 
     def setup_walls(self):
         self.walls: list[MMWall] = [
-            MMWall(self.bins[0].back_wall_edge, 100),
-            MMWall(self.bins[0].back_wall_edge, 350),
-            MMWall(self.bins[0].back_wall_edge, 530),
-            MMWall(self.bins[1].back_wall_edge, 560),
-            MMWall(self.bins[1].back_wall_edge, 200),
-            MMWall(self.bins[2].back_wall_edge, 300),
-            MMWall(self.bins[2].back_wall_edge, 120),
-            MMWall(self.bins[3].back_wall_edge, 500),
-            MMWall(self.bins[4].back_wall_edge, 420),
-            MMWall(self.bins[4].back_wall_edge, 320),
-            MMWall(self.bins[5].back_wall_edge, 100),
-            MMWall(self.bins[5].back_wall_edge, 530),
-            MMWall(self.bins[6].back_wall_edge, 250),
-            MMWall(self.bins[6].back_wall_edge, 450),
-            MMWall(self.bins[7].back_wall_edge, 350)
+            MMWall(self.bins[0].back_wall_edge),
+            MMWall(self.bins[1].back_wall_edge),
+            MMWall(self.bins[2].back_wall_edge),
+            MMWall(self.bins[3].back_wall_edge),
+            MMWall(self.bins[4].back_wall_edge),
+            MMWall(self.bins[5].back_wall_edge),
+            MMWall(self.bins[6].back_wall_edge),
+            MMWall(self.bins[7].back_wall_edge)
         ]
 
 

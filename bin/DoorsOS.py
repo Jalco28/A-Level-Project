@@ -54,7 +54,7 @@ class InfoBar:
         mode_text = self.font.render(
             self.mode_text, True,  BLACK, GREY)
         score_text = self.font.render(
-            f'Score: {self.score}', True, BLACK, GREY)
+            f'Score: {int(self.score)}', True, BLACK, GREY)
         difficulty_text = self.font.render(
             f'Difficulty Level: {self.difficulty_level}', True, BLACK, GREY)
 
@@ -64,7 +64,7 @@ class InfoBar:
 
     def update(self):
         time_paused = self.get_time_paused()
-        self.score = int(time.time() - time_paused - self.start_time)
+        self.score = time.time() - time_paused - self.start_time
 
     def get_time_paused(self):
         time_paused = 0
