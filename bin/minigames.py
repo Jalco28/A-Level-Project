@@ -5,8 +5,8 @@ from copy import copy
 
 
 class MiniGame:
-    @classmethod
-    def translate_coords(cls, x, y):
+    @staticmethod
+    def translate_coords(x, y):
         """Converts whole screen coords to coords within sub_rect"""
         return x-5, y-(SCREEN_HEIGHT*0.13)
 
