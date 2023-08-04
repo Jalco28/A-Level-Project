@@ -124,6 +124,34 @@ class STTInfoBar:  # Score, target, time, info bar
         screen.blit(time_text, self.time_rect)
 
 
+class TimeInfoBar:
+    def __init__(self, time_allowed, global_info_bar):
+        self.global_info_bar = global_info_bar
+        self.time_allowed = time_allowed
+        self.start_timestamp = self.global_info_bar.score
+        self.rect = pygame.Rect(
+            10, 10, MINIGAME_WIDTH*0.8, MINIGAME_HEIGHT*0.08)
+        self.font = pygame.font.SysFont("Arial", 30)
+
+        time_text = self.font.render(
+            f'Time Remaining: {self.time_left}', True, BLACK, GREY)
+
+        self.time_rect = time_text.get_rect(center=self.rect.center)
+
+    @property
+    def time_left(self):
+        return max(int(self.time_allowed-(self.global_info_bar.score-self.start_timestamp)), 0)
+
+    def draw(self, screen: pygame.Surface):
+        pygame.draw.rect(screen, GREY, self.rect)
+        pygame.draw.rect(screen, BLACK, self.rect, 3, 2)
+
+        time_text = self.font.render(
+            f'Time Remaining: {self.time_left}', True, BLACK, GREY)
+
+        screen.blit(time_text, self.time_rect)
+
+
 class RMIButton:
     ID = 0
     IMAGE_NAMES = ['download',
@@ -295,8 +323,10 @@ class MMGarbage:
             self.pos = mouse_vector
             self.update_rect()
         else:
-            self.pos = pygame.math.Vector2(MMGarbage.HOME_POS) + displacement_from_home.normalize()*-170
+            self.pos = pygame.math.Vector2(
+                MMGarbage.HOME_POS) + displacement_from_home.normalize()*-170
             self.update_rect()
+
     def throw(self):
         """Returns if garbage was actually thrown"""
         self.grabbed = False
@@ -327,3 +357,52 @@ class MMWall:
         self.time += 1
         if self.time >= 360/self.speed:
             self.time = 0
+
+
+class DDBlock:
+    def __init__(self, coordinates: list[tuple[int, int]], center_x, center_y, colour):
+        self.tile_size = 50
+        self.tile_image = pygame.image.load(f'images/DD/{colour}.png')
+        self.normalise_coordinates(coordinates)
+
+        no_tiles_wide = len(set(coord[0] for coord in self.coordinates))
+        no_tiles_high = len(set(coord[1] for coord in self.coordinates))
+        self.rect = pygame.Rect(0, 0, no_tiles_wide *
+                                self.tile_size, no_tiles_high*self.tile_size)
+        self.rect.center = (center_x, center_y)
+        self.setup_collision_rects()
+        self.grabbed = False
+
+    def draw(self, screen: pygame.Surface):
+        for tile in self.coordinates:
+            screen.blit(self.tile_image, (self.rect.left + self.tile_size *
+                        tile[0], self.rect.top + self.tile_size*tile[1]))
+        pygame.draw.circle(screen, BLACK, self.rect.center, 5)
+
+    def normalise_coordinates(self, coordinates):
+        min_x = min(coordinates, key=lambda x: x[0])[0]
+        min_y = min(coordinates, key=lambda x: x[1])[1]
+        delta = (-min_x, -min_y)
+        self.coordinates = [tuple_addition(
+            coord, delta) for coord in coordinates]
+
+    def setup_collision_rects(self):
+        self.collision_rects:list[pygame.Rect] = []
+        for tile in self.coordinates:
+            self.collision_rects.append(pygame.Rect(self.rect.left + self.tile_size *
+             tile[0], self.rect.top + self.tile_size*tile[1], self.tile_size, self.tile_size))
+
+    def drag(self, delta):
+        self.rect.move_ip(*delta)
+        for rect in self.collision_rects:
+            rect.move_ip(*delta)
+
+    def collide(self, x, y):
+        for rect in self.collision_rects:
+            if rect.collidepoint(x, y):
+                return True
+        return False
+
+
+def tuple_addition(a, b):
+    return tuple(sum(x) for x in zip(a, b))

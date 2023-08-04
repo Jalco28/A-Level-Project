@@ -1,7 +1,9 @@
 import pygame
 from constants import *
 from utils import *
-from copy import copy
+from copy import copy, deepcopy
+from math import ceil, floor
+from itertools import cycle
 
 
 class MiniGame:
@@ -173,7 +175,8 @@ class RegisterMouseInputs(MiniGame):
         if not self.running:
             return self.update_ending_sequence()
 
-        self.check_time_and_target()  # Check for game over
+        if not DEBUG:
+            self.check_time_and_target()  # Check for game over
 
         while len(self.buttons) < 5:  # Ensure 5 buttons exist
             self.buttons[RMIButton.ID-1] = RMIButton(
@@ -257,6 +260,9 @@ class MemoryManagement(MiniGame):
         if not self.running:
             return self.update_ending_sequence()
 
+        if not DEBUG:
+            self.check_time_and_target()  # Check for game over
+
         for wall in self.walls:
             wall.update()
 
@@ -331,7 +337,8 @@ class MemoryManagement(MiniGame):
     def take_event(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEMOTION:
             if self.catapult_garbage.grabbed:
-                self.catapult_garbage.drag(*MiniGame.translate_coords(*event.pos))
+                self.catapult_garbage.drag(
+                    *MiniGame.translate_coords(*event.pos))
 
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
@@ -342,26 +349,35 @@ class MemoryManagement(MiniGame):
                         # pass
 
 
-
 class DefragDisk(MiniGame):
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
-        self.label1 = self.font.render(
-            'Defrag Disk', True, BLACK, GREY)
-        self.label1_rect = self.label1.get_rect(center=self.sub_rect.center)
+        self.cell_size = 50
+        grid_size = self.cell_size*8
+
+        self.grid_rect = pygame.Rect(self.sub_rect.centerx-(grid_size/2),
+                                     self.sub_rect.centery-(grid_size/2), grid_size, grid_size)
+        self.info_bar = TimeInfoBar(10, global_info_bar)
+        self.setup_blocks()
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
             return self.draw_ending_screen(screen)
 
-        self.sub_surface.fill(GREY)
-        self.sub_surface.blit(self.label1, self.label1_rect)
+        self.sub_surface.fill(WHITE)
 
+        self.draw_grid(self.sub_surface)
+        self.draw_blocks(self.sub_surface)
+
+        self.info_bar.draw(self.sub_surface)
         self.common_drawing(screen)
 
     def update(self):
         if not self.running:
             return self.update_ending_sequence()
+        if not DEBUG:
+            self.check_time_and_target()  # Check for game over
+
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
             click_used = False
@@ -370,6 +386,98 @@ class DefragDisk(MiniGame):
                 x, y) or self.check_info_bar_clicked(x, y)
             if click_used:
                 continue
+
+            for block in reversed(self.blocks):  # Check in reverse draw order
+                if block.collide(x, y):
+                    block.grabbed = True
+                    click_used = True
+                    break
+            if click_used:
+                continue
+
+    def draw_grid(self, surface):
+        for i in range(0, 9):
+            pygame.draw.line(surface, BLACK, (self.grid_rect.left+i*self.cell_size,
+                             self.grid_rect.top), (self.grid_rect.left+i*self.cell_size, self.grid_rect.bottom))
+        for i in range(0, 9):
+            pygame.draw.line(surface, BLACK, (self.grid_rect.left, self.grid_rect.top+i *
+                             self.cell_size), (self.grid_rect.right, self.grid_rect.top+i*self.cell_size))
+
+    def draw_blocks(self, surface):
+        for block in self.blocks:
+            block.draw(surface)
+
+    def setup_blocks(self):
+        """
+        How this mess works:
+
+        1. Generate all coords
+        2. While there are still unallocated tiles:
+            - Put a random unallocated tile into a working_list
+            - Between 1 and 10 times try and change the position of one tile in working_list by one square ensuring its in bounds and not already taken
+            - If a tile is out of bounds a regeneration is attempted
+            - If a tile is already allocated a regeneration is attempted
+        """
+        self.blocks: list[DDBlock] = []
+        block_arrangements: list[list[tuple[int, int]]] = []
+        unallocated_coords = [(x, y) for x in range(0, 8) for y in range(0, 8)]
+        valid_coords = deepcopy(unallocated_coords)
+        while unallocated_coords:
+            working_list = [unallocated_coords.pop(
+                random.randint(0, len(unallocated_coords)-1))]
+            for i in range(random.randint(1, 5)):
+                choice = random.choice(working_list)
+                new_tile = (-1, -1)
+                attempts = 0
+                MAX_ATTEMPTS = 20
+                while ((new_tile not in valid_coords) or (new_tile not in unallocated_coords+[(-1, -1)])) and (attempts <= MAX_ATTEMPTS):
+                    attempts += 1
+                    indicie_to_change = random.randint(0, 1)
+                    delta = random.choice((-1, 1))
+                    if indicie_to_change == 0:
+                        new_tile = (choice[0]+delta, choice[1])
+                    if indicie_to_change == 1:
+                        new_tile = (choice[0], choice[1]+delta)
+                if attempts != MAX_ATTEMPTS+1:
+                    working_list.append(new_tile)
+                    unallocated_coords.remove(new_tile)
+            block_arrangements.append(working_list)
+
+        if len(block_arrangements) % 2 == 0:
+            left_blocks = int(len(block_arrangements) / 2)
+            right_blocks = int(len(block_arrangements) / 2)
+        else:
+            left_blocks = ceil(len(block_arrangements) / 2)
+            right_blocks = floor(len(block_arrangements) / 2)
+
+        left_spacing = round(600 / left_blocks)
+        right_spacing = round(600 / right_blocks)
+        left_centers = []
+        right_centers = []
+        left_x = 200
+        right_x = 1000
+        for i in range(left_blocks):
+            left_centers.append((left_x, 180+left_spacing*i))
+        for i in range(right_blocks):
+            right_centers.append((right_x, 180+right_spacing*i))
+
+        centers = left_centers + right_centers
+
+        colour_generator = cycle(
+            ['blue', 'green', 'pink', 'red', 'yellow', 'purple'])
+        for i in range(len(block_arrangements)):
+            self.blocks.append(DDBlock(
+                block_arrangements[i], centers[i][0], centers[i][1], next(colour_generator)))
+
+    def take_event(self, event: pygame.event.Event):
+        if event.type == pygame.MOUSEMOTION:
+            for block in self.blocks:
+                if block.grabbed:
+                    block.drag(event.rel)
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            for block in self.blocks:
+                block.grabbed = False
 
 
 class SelectDrivers(MiniGame):
