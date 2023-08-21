@@ -2,7 +2,7 @@ import time
 from constants import *
 import pygame
 import random
-from math import radians, sin
+from math import radians, sin, sqrt
 
 
 class Button:
@@ -360,8 +360,10 @@ class MMWall:
 
 
 class DDBlock:
-    def __init__(self, coordinates: list[tuple[int, int]], center_x, center_y, colour):
+    def __init__(self, coordinates: list[tuple[int, int]], center_x, center_y, colour, grid_rect:pygame.Rect):
         self.tile_size = 50
+        self.grid_rect = grid_rect
+        self.home_pos = (center_x, center_y)
         self.tile_image = pygame.image.load(f'images/DD/{colour}.png')
         self.normalise_coordinates(coordinates)
 
@@ -377,7 +379,8 @@ class DDBlock:
         for tile in self.coordinates:
             screen.blit(self.tile_image, (self.rect.left + self.tile_size *
                         tile[0], self.rect.top + self.tile_size*tile[1]))
-        pygame.draw.circle(screen, BLACK, self.rect.center, 5)
+        if DEBUG:
+            pygame.draw.circle(screen, BLACK, self.rect.center, 5)
 
     def normalise_coordinates(self, coordinates):
         min_x = min(coordinates, key=lambda x: x[0])[0]
@@ -387,10 +390,67 @@ class DDBlock:
             coord, delta) for coord in coordinates]
 
     def setup_collision_rects(self):
-        self.collision_rects:list[pygame.Rect] = []
+        self.collision_rects: list[pygame.Rect] = []
         for tile in self.coordinates:
             self.collision_rects.append(pygame.Rect(self.rect.left + self.tile_size *
-             tile[0], self.rect.top + self.tile_size*tile[1], self.tile_size, self.tile_size))
+                                                    tile[0], self.rect.top + self.tile_size*tile[1], self.tile_size, self.tile_size))
+
+    def occupied_tiles(self):
+        """Returns set of coords of occupied tiles"""
+        coords = set()
+        for tile in self.collision_rects:
+            try:
+                coords.add(DD_TILE_CENTERS_TO_COORDS[tile.center])
+            except KeyError:    #Tile is not snapped to grid
+                return set()
+        return coords
+
+    def ungrab(self, occupied_tiles:set):
+        """Returns None if snap unsuccessful else returns newly occupied coords"""
+        self.grabbed = False
+        snap_delta = None
+
+        # Check grid alignment
+        if rect_full_collision(self.grid_rect.inflate(40,40), self.rect):
+            tile = self.collision_rects[0]
+            deltas = [tuple_addition((-tile.centerx, -tile.centery), tile_center) for tile_center in DD_TILE_CENTERS]
+            snap_delta = min(deltas, key=tuple_pythag)
+        else:
+            if self.grid_rect.colliderect(self.rect):
+                return self.go_home()
+            else:
+                return
+
+        # passed_rects = 0
+        # for rect in self.collision_rects:
+        #     for grid_center in DD_TILE_CENTERS:
+        #         if tuple_pythag(tuple_addition((-rect.centerx, -rect.centery), grid_center)) <= 25:
+        #             passed_rects += 1
+        #             if snap_delta is None:
+        #                 snap_delta = tuple_addition(
+        #                     (-rect.centerx, -rect.centery), grid_center)
+        #             break
+        # if passed_rects != len(self.collision_rects):
+        #     if self.grid_rect.colliderect(self.rect):
+        #         return self.go_home()
+        #     else:
+        #         return
+
+        # Check grid occupation
+        potential_occupations = set()
+        for tile in self.collision_rects:
+            moved_tile = tile.move(*snap_delta)
+            coords = DD_TILE_CENTERS_TO_COORDS[moved_tile.center]
+            if coords in occupied_tiles:
+                if self.grid_rect.colliderect(self.rect):
+                    return self.go_home()
+                else:
+                    return
+            else:
+                potential_occupations.add(coords)
+        # Snap
+        self.drag(snap_delta)
+        return potential_occupations
 
     def drag(self, delta):
         self.rect.move_ip(*delta)
@@ -403,6 +463,31 @@ class DDBlock:
                 return True
         return False
 
+    def go_home(self):
+        self.goto(*self.home_pos)
+
+    def goto(self, x, y):
+        self.rect.center = (x, y)
+        self.setup_collision_rects()
+
 
 def tuple_addition(a, b):
     return tuple(sum(x) for x in zip(a, b))
+
+
+def tuple_pythag(x):
+    return sqrt(x[0]**2 + x[1]**2)
+
+
+def rect_full_collision(big: pygame.Rect, small: pygame.Rect):
+    if not big.colliderect(small):
+        return False
+    if small.top < big.top:
+        return False
+    if small.bottom > big.bottom:
+        return False
+    if small.left < big.left:
+        return False
+    if small.right > big.right:
+        return False
+    return True
