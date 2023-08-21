@@ -2,8 +2,7 @@ import pygame
 from constants import *
 from utils import *
 from copy import copy, deepcopy
-from math import ceil, floor
-from itertools import cycle
+from itertools import cycle, combinations
 
 
 class MiniGame:
@@ -526,24 +525,59 @@ class DefragDisk(MiniGame):
 
 
 class SelectDrivers(MiniGame):
+    @staticmethod
+    def convert_top_left_to_cartesian(coord: tuple[int]):
+        return (coord[0], MINIGAME_HEIGHT-coord[1])
+
+    @staticmethod
+    def convert_cartesian_to_top_left(coord: pygame.math.Vector2):
+        return (coord[0], MINIGAME_HEIGHT-coord[1])
+
+    @staticmethod
+    def cross_product_2d(a: pygame.math.Vector2, b: pygame.math.Vector2):
+        return a[0]*b[1] - a[1]*b[0]
+
+    @staticmethod
+    def dot_product_2d(a: pygame.math.Vector2, b: pygame.math.Vector2):
+        return a[0]*b[0] + a[1]*b[1]
+
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
-        self.label1 = self.font.render(
-            'Select Drivers', True, BLACK, GREY)
-        self.label1_rect = self.label1.get_rect(center=self.sub_rect.center)
+        self.setup_nodes()
+        self.intersections = []
+        self.connections = [(0, 1), (0, 2), (1, 2), (2, 3)]
+        self.info_bar = TimeInfoBar(20, global_info_bar)
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
             return self.draw_ending_screen(screen)
 
-        self.sub_surface.fill(GREY)
-        self.sub_surface.blit(self.label1, self.label1_rect)
+        self.sub_surface.fill(WHITE)
 
+        for node in self.nodes:
+            node.draw(self.sub_surface)
+
+        for connection in self.connections:
+            pygame.draw.aaline(self.sub_surface, RED,
+                               self.nodes[connection[0]].pos, self.nodes[connection[1]].pos)
+
+        for intersection in self.intersections:
+            pygame.draw.circle(self.sub_surface, BLUE, intersection, 5)
+
+        self.info_bar.draw(self.sub_surface)
         self.common_drawing(screen)
 
     def update(self):
         if not self.running:
             return self.update_ending_sequence()
+
+        self.intersections = []
+        for connection_pair in combinations(self.connections, 2):
+            intersect = self.check_line_intersection(
+                self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
+            if intersect:
+                self.intersections.append(intersect)
+
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
             click_used = False
@@ -553,6 +587,75 @@ class SelectDrivers(MiniGame):
             if click_used:
                 continue
 
+            for node in reversed(copy(self.nodes)):  # Check in reverse draw order
+                if tuple_pythag(tuple_addition((-x, -y), node.pos)) <= SDNode.RADIUS:
+                    # Move node to end of list
+                    # self.nodes.append(self.nodes.pop(self.nodes.index(node)))
+                    node.grabbed = True
+                    click_used = True
+                    break
+            if click_used:
+                continue
+
+    def setup_nodes(self):
+        self.nodes = [SDNode((200, 200)),
+                      SDNode((200, 600)),
+                      SDNode((600, 400)),
+                      SDNode((500, 400))
+                      ]
+
+    def take_event(self, event: pygame.event.Event):
+        if event.type == pygame.MOUSEMOTION:
+            for node in self.nodes:
+                if node.grabbed:
+                    node.drag(event.rel)
+        if event.type == pygame.MOUSEBUTTONUP:
+            for node in self.nodes:
+                node.grabbed = False
+
+    def check_line_intersection(self, p1: tuple[int], p2: tuple[int], p3: tuple[int], p4: tuple[int]):
+        """2D specialisation of Ronald Goldman's 3D line intersection
+            Returns False for no intersection or infinite intersection, tuple for unique intersection point"""
+        p1 = pygame.math.Vector2(
+            SelectDrivers.convert_top_left_to_cartesian(p1))
+        p2 = pygame.math.Vector2(
+            SelectDrivers.convert_top_left_to_cartesian(p2))
+        p3 = pygame.math.Vector2(
+            SelectDrivers.convert_top_left_to_cartesian(p3))
+        p4 = pygame.math.Vector2(
+            SelectDrivers.convert_top_left_to_cartesian(p4))
+        l1_delta = p2-p1
+        l2_delta = p4-p3
+
+        try:
+            lamda = SelectDrivers.cross_product_2d(
+                p3-p1, l2_delta/SelectDrivers.cross_product_2d(l1_delta, l2_delta))
+            mu = SelectDrivers.cross_product_2d(
+                p3-p1, l1_delta/SelectDrivers.cross_product_2d(l1_delta, l2_delta))
+        except ZeroDivisionError:  # Seems to happen when collinear
+            return False
+
+        # Lines are collinear
+        if SelectDrivers.cross_product_2d(l1_delta, l2_delta) == 0 and SelectDrivers.cross_product_2d(p3-p1, l1_delta) == 0:
+            return False
+        # Lines are parallel and non-intersecting
+        elif SelectDrivers.cross_product_2d(l1_delta, l2_delta) == 0 and SelectDrivers.cross_product_2d(p3-p1, l1_delta) != 0:
+            return False
+        # Intersect at unique point
+        elif SelectDrivers.cross_product_2d(l1_delta, l2_delta) != 0 and (0 <= lamda <= 1) and (0 <= mu <= 1):
+            if DEBUG:
+                assert p1 + lamda*l1_delta == p3 + mu*l2_delta
+            intersect_point = SelectDrivers.convert_cartesian_to_top_left(
+                p1 + lamda*l1_delta)
+
+            # Check if intersection is at a node, disregard if so. Rounding for floating point errors
+            if (round(intersect_point[0]), round(intersect_point[1])) in [x.pos for x in self.nodes]:
+                return False
+            else:
+                return intersect_point
+        # Also lines are parallel and non-intersecting
+        else:
+            return False
 
 class UserAuthentication(MiniGame):
     def __init__(self, global_info_bar):

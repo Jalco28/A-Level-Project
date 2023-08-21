@@ -360,7 +360,7 @@ class MMWall:
 
 
 class DDBlock:
-    def __init__(self, coordinates: list[tuple[int, int]], center_x, center_y, colour, grid_rect:pygame.Rect):
+    def __init__(self, coordinates: list[tuple[int, int]], center_x, center_y, colour, grid_rect: pygame.Rect):
         self.tile_size = 50
         self.grid_rect = grid_rect
         self.home_pos = (center_x, center_y)
@@ -401,19 +401,20 @@ class DDBlock:
         for tile in self.collision_rects:
             try:
                 coords.add(DD_TILE_CENTERS_TO_COORDS[tile.center])
-            except KeyError:    #Tile is not snapped to grid
+            except KeyError:  # Tile is not snapped to grid
                 return set()
         return coords
 
-    def ungrab(self, occupied_tiles:set):
+    def ungrab(self, occupied_tiles: set):
         """Returns None if snap unsuccessful else returns newly occupied coords"""
         self.grabbed = False
         snap_delta = None
 
         # Check grid alignment
-        if rect_full_collision(self.grid_rect.inflate(40,40), self.rect):
+        if rect_full_collision(self.grid_rect.inflate(40, 40), self.rect):
             tile = self.collision_rects[0]
-            deltas = [tuple_addition((-tile.centerx, -tile.centery), tile_center) for tile_center in DD_TILE_CENTERS]
+            deltas = [tuple_addition(
+                (-tile.centerx, -tile.centery), tile_center) for tile_center in DD_TILE_CENTERS]
             snap_delta = min(deltas, key=tuple_pythag)
         else:
             if self.grid_rect.colliderect(self.rect):
@@ -469,6 +470,26 @@ class DDBlock:
     def goto(self, x, y):
         self.rect.center = (x, y)
         self.setup_collision_rects()
+
+
+class SDNode:
+    RADIUS = 15
+
+    def __init__(self, pos):
+        self.pos = pos
+        self.grabbed = False
+
+    def __repr__(self) -> str:
+        return str(self.pos)
+
+    def define_partners(self, partners):
+        self.partners: list[SDNode] = partners
+
+    def draw(self, surface):
+        pygame.draw.circle(surface, BLACK, self.pos, SDNode.RADIUS)
+
+    def drag(self, delta):
+        self.pos = tuple_addition(self.pos, delta)
 
 
 def tuple_addition(a, b):
