@@ -441,9 +441,9 @@ class DoorsOS:
 
         if self.current_mini_game.ready_to_exit:
             if self.current_mini_game.success:
-                self.frustration_bar.frustration_level += 10
-            else:
                 self.frustration_bar.frustration_level -= 10
+            else:
+                self.frustration_bar.frustration_level += 10
             self.change_minigame(minigames.EmptyMiniGame)
 
     def update_screen(self):
