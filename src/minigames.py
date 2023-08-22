@@ -2,7 +2,8 @@ import pygame
 from constants import *
 from utils import *
 from copy import copy, deepcopy
-from itertools import cycle, combinations
+from itertools import cycle, combinations, pairwise
+from math import cos, pi, sin
 
 
 class MiniGame:
@@ -91,7 +92,7 @@ class MiniGame:
         self.clicks_to_handle = []
         if self.countdown_start_time is None:
             self.countdown_start_time = self.global_info_bar.score
-        if self.global_info_bar.score - self.countdown_start_time >= 2:
+        if (self.global_info_bar.score - self.countdown_start_time >= 2) or DEBUG:
             self.ready_to_exit = True
 
     def draw_ending_screen(self, screen: pygame.Surface):
@@ -391,7 +392,7 @@ class DefragDisk(MiniGame):
             self.running = False
             self.success = True
             self.ending_message = self.font.render(
-                'Puzzle Filled!', True, BLACK, GREY)
+                'Puzzle Completed!', True, BLACK, GREY)
             self.ending_message_rect = self.ending_message.get_rect(
                 center=self.sub_rect.center)
 
@@ -541,79 +542,8 @@ class SelectDrivers(MiniGame):
     def dot_product_2d(a: pygame.math.Vector2, b: pygame.math.Vector2):
         return a[0]*b[0] + a[1]*b[1]
 
-    def __init__(self, global_info_bar):
-        super().__init__(global_info_bar)
-        self.setup_nodes()
-        self.intersections = []
-        self.connections = [(0, 1), (0, 2), (1, 2), (2, 3)]
-        self.info_bar = TimeInfoBar(20, global_info_bar)
-
-    def draw(self, screen: pygame.Surface):
-        if not self.running:
-            return self.draw_ending_screen(screen)
-
-        self.sub_surface.fill(WHITE)
-
-        for node in self.nodes:
-            node.draw(self.sub_surface)
-
-        for connection in self.connections:
-            pygame.draw.aaline(self.sub_surface, RED,
-                               self.nodes[connection[0]].pos, self.nodes[connection[1]].pos)
-
-        for intersection in self.intersections:
-            pygame.draw.circle(self.sub_surface, BLUE, intersection, 5)
-
-        self.info_bar.draw(self.sub_surface)
-        self.common_drawing(screen)
-
-    def update(self):
-        if not self.running:
-            return self.update_ending_sequence()
-
-        self.intersections = []
-        for connection_pair in combinations(self.connections, 2):
-            intersect = self.check_line_intersection(
-                self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
-            if intersect:
-                self.intersections.append(intersect)
-
-        while self.clicks_to_handle:
-            x, y = self.clicks_to_handle.pop(0)
-            click_used = False
-
-            click_used = self.check_forfeit_buttons_clicked(
-                x, y) or self.check_info_bar_clicked(x, y)
-            if click_used:
-                continue
-
-            for node in reversed(copy(self.nodes)):  # Check in reverse draw order
-                if tuple_pythag(tuple_addition((-x, -y), node.pos)) <= SDNode.RADIUS:
-                    # Move node to end of list
-                    # self.nodes.append(self.nodes.pop(self.nodes.index(node)))
-                    node.grabbed = True
-                    click_used = True
-                    break
-            if click_used:
-                continue
-
-    def setup_nodes(self):
-        self.nodes = [SDNode((200, 200)),
-                      SDNode((200, 600)),
-                      SDNode((600, 400)),
-                      SDNode((500, 400))
-                      ]
-
-    def take_event(self, event: pygame.event.Event):
-        if event.type == pygame.MOUSEMOTION:
-            for node in self.nodes:
-                if node.grabbed:
-                    node.drag(event.rel)
-        if event.type == pygame.MOUSEBUTTONUP:
-            for node in self.nodes:
-                node.grabbed = False
-
-    def check_line_intersection(self, p1: tuple[int], p2: tuple[int], p3: tuple[int], p4: tuple[int]):
+    @staticmethod
+    def check_line_intersection(p1: tuple[int], p2: tuple[int], p3: tuple[int], p4: tuple[int]):
         """2D specialisation of Ronald Goldman's 3D line intersection
             Returns False for no intersection or infinite intersection, tuple for unique intersection point"""
         p1 = pygame.math.Vector2(
@@ -645,17 +575,186 @@ class SelectDrivers(MiniGame):
         elif SelectDrivers.cross_product_2d(l1_delta, l2_delta) != 0 and (0 <= lamda <= 1) and (0 <= mu <= 1):
             if DEBUG:
                 assert p1 + lamda*l1_delta == p3 + mu*l2_delta
-            intersect_point = SelectDrivers.convert_cartesian_to_top_left(
-                p1 + lamda*l1_delta)
+            intersect_point = p1 + lamda*l1_delta
 
-            # Check if intersection is at a node, disregard if so. Rounding for floating point errors
-            if (round(intersect_point[0]), round(intersect_point[1])) in [x.pos for x in self.nodes]:
+            # Check if intersection is at a node, disregard if so.
+            if intersect_point in [p1, p2, p3, p4]:
                 return False
             else:
-                return intersect_point
+                return SelectDrivers.convert_cartesian_to_top_left(intersect_point)
         # Also lines are parallel and non-intersecting
         else:
             return False
+
+    def __init__(self, global_info_bar):
+        super().__init__(global_info_bar)
+        self.intersections = []
+        self.info_bar = TimeInfoBar(20, global_info_bar)
+        self.setup_nodes()
+
+    def draw(self, screen: pygame.Surface):
+        if not self.running:
+            return self.draw_ending_screen(screen)
+
+        self.sub_surface.fill(WHITE)
+
+        if DEBUG:
+            for node in self.nodes:
+                node.draw(self.sub_surface)
+
+            for connection in self.connections:
+                pygame.draw.aaline(self.sub_surface, RED,
+                                   self.nodes[connection[0]].pos, self.nodes[connection[1]].pos)
+
+            for intersection in self.intersections:
+                pygame.draw.circle(self.sub_surface, BLUE, intersection, 5)
+        else:
+            for connection in self.connections:
+                pygame.draw.aaline(self.sub_surface, BLACK,
+                                   self.nodes[connection[0]].pos, self.nodes[connection[1]].pos)
+
+            for node in self.nodes:
+                node.draw(self.sub_surface, len(self.intersections) == 0)
+
+        self.info_bar.draw(self.sub_surface)
+        self.common_drawing(screen)
+
+    def update(self):
+        if not self.running:
+            return self.update_ending_sequence()
+
+        self.intersections = []
+        for connection_pair in combinations(self.connections, 2):
+            intersect = self.check_line_intersection(
+                self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
+            if intersect:
+                self.intersections.append(intersect)
+
+        self.info_bar.change_custom_field_value('Line Crossings', len(self.intersections))
+
+        while self.clicks_to_handle:
+            x, y = self.clicks_to_handle.pop(0)
+            click_used = False
+
+            click_used = self.check_forfeit_buttons_clicked(
+                x, y) or self.check_info_bar_clicked(x, y)
+            if click_used:
+                continue
+
+            for node in reversed(copy(self.nodes)):  # Check in reverse draw order
+                if tuple_pythag(tuple_addition((-x, -y), node.pos)) <= SDNode.RADIUS:
+                    # Move node to end of list
+                    # self.nodes.append(self.nodes.pop(self.nodes.index(node)))
+                    node.grabbed = True
+                    click_used = True
+                    break
+            if click_used:
+                continue
+
+    @property
+    def invalid_new_connections(self):
+        return self.connections+[tuple(reversed(x)) for x in self.connections]
+
+    def setup_nodes(self):
+        self.nodes: list[SDNode] = []
+        self.connections = []
+        radius = 340
+        initial_nodes = random.randint(4, 7)
+        rel_coords = []  # List of coords relative to center of screen
+
+        for i in range(initial_nodes):  # Place nodes evenly around circle
+            rel_coords.append(
+                (radius*(cos((i*2*pi)/initial_nodes)), radius*(sin((i*2*pi)/initial_nodes))))
+
+        abs_coords = [tuple_addition(
+            (MINIGAME_WIDTH/2, MINIGAME_HEIGHT/2), coord) for coord in rel_coords]
+        for coord in abs_coords:
+            self.nodes.append(SDNode(coord))
+
+        # Connect all initial nodes
+        for connection in pairwise(range(initial_nodes)):
+            self.connections.append(connection)
+        self.connections.append((0, initial_nodes-1))
+
+        # Add connections between initial nodes
+        connections_left = random.randint(
+            min(4, initial_nodes-3), initial_nodes-3)
+        while connections_left > 0:
+            new_connection = self.connections[0]
+            while new_connection in self.invalid_new_connections or new_connection[0] == new_connection[1]:
+                new_connection = (random.randint(
+                    0, initial_nodes-1), random.randint(0, initial_nodes-1))
+            if DEBUG:
+                assert new_connection[0] != new_connection[1]
+
+            casues_intersections = False
+            for connection_pair in combinations(self.connections+[new_connection], 2):
+                intersect = self.check_line_intersection(
+                    self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
+                if intersect:
+                    casues_intersections = True
+
+            if casues_intersections:
+                continue
+            else:
+                self.connections.append(new_connection)
+                connections_left -= 1
+
+        # Add two nodes in middle
+        self.nodes.extend([
+            SDNode(((MINIGAME_WIDTH/2)+30, (MINIGAME_HEIGHT/2)+30)),
+            SDNode(((MINIGAME_WIDTH/2)-30, (MINIGAME_HEIGHT/2)-30))
+        ])
+
+        # Try and connect extra nodes
+        for i in range(2):
+            node_index = len(self.nodes)-1-i
+            attempts_left = 10
+            while attempts_left > 0:
+                new_connection = self.connections[0]
+                while new_connection in self.invalid_new_connections or new_connection[0] == new_connection[1]:
+                    new_connection = (
+                        node_index, random.randint(0, len(self.nodes)-1))
+
+                casues_intersections = False
+                for connection_pair in combinations(self.connections+[new_connection], 2):
+                    intersect = self.check_line_intersection(
+                        self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
+                    if intersect:
+                        casues_intersections = True
+
+                if not casues_intersections:
+                    self.connections.append(new_connection)
+                attempts_left -= 1
+
+
+        for node in self.nodes:
+            node.randomise_position()
+        self.info_bar.add_custom_field('Line Crossings', self.count_intersections())
+
+    def count_intersections(self):
+        num_intersections = 0
+        for connection_pair in combinations(self.connections, 2):
+            intersect = self.check_line_intersection(
+                self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
+            if intersect:
+                num_intersections += 1
+        return num_intersections
+
+    def take_event(self, event: pygame.event.Event):
+        if event.type == pygame.MOUSEMOTION:
+            for node in self.nodes:
+                if node.grabbed:
+                    node.drag(event.rel)
+        if event.type == pygame.MOUSEBUTTONUP:
+            for node in self.nodes:
+                node.grabbed = False
+            if len(self.intersections) == 0:
+                self.success = True
+                self.running = False
+                self.ending_message = self.font.render('Puzzle Completed!', True, BLACK, GREY)
+                self.ending_message_rect = self.ending_message.get_rect(center=self.sub_rect.center)
+
 
 class UserAuthentication(MiniGame):
     def __init__(self, global_info_bar):

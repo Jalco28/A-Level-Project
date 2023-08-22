@@ -137,6 +137,9 @@ class TimeInfoBar:
             f'Time Remaining: {self.time_left}', True, BLACK, GREY)
 
         self.time_rect = time_text.get_rect(center=self.rect.center)
+        # Name:(value, rect, rendered text)
+        self.custom_fields: dict[str,
+                                 tuple[int | float, pygame.Rect, str]] = {}
 
     @property
     def time_left(self):
@@ -148,8 +151,36 @@ class TimeInfoBar:
 
         time_text = self.font.render(
             f'Time Remaining: {self.time_left}', True, BLACK, GREY)
-
         screen.blit(time_text, self.time_rect)
+
+        self.update_custom_field_text()
+        self.draw_custom_fields(screen)
+
+    def add_custom_field(self, name, inital_value):
+        text = self.font.render(f'{name}: {inital_value}', True, BLACK, GREY)
+        total_number_of_fields = len(self.custom_fields) + 2
+        field_spacing = self.rect.width/(total_number_of_fields+1)
+        rect = text.get_rect(center=(
+            self.rect.left+(len(self.custom_fields)+1)*field_spacing, self.rect.centery))
+        self.custom_fields[name] = (inital_value, rect, text)
+
+        self.time_rect.centerx = self.rect.left + \
+            (len(self.custom_fields)+1)*field_spacing
+
+    def update_custom_field_text(self):
+        for field in self.custom_fields.items():
+            key = field[0]
+            value = field[1]
+            value = (value[0], value[1], self.font.render(f'{key}: {value[0]}', True, BLACK, GREY))
+            self.custom_fields[key] = value
+
+    def draw_custom_fields(self, screen: pygame.Surface):
+        for field in self.custom_fields.items():
+            screen.blit(field[1][2], field[1][1])
+
+    def change_custom_field_value(self, name, value):
+        old_tuple = self.custom_fields[name]
+        self.custom_fields[name] = (value, old_tuple[1], old_tuple[2])
 
 
 class RMIButton:
@@ -476,7 +507,7 @@ class SDNode:
     RADIUS = 15
 
     def __init__(self, pos):
-        self.pos = pos
+        self.pos = tuple(pos)
         self.grabbed = False
 
     def __repr__(self) -> str:
@@ -485,11 +516,17 @@ class SDNode:
     def define_partners(self, partners):
         self.partners: list[SDNode] = partners
 
-    def draw(self, surface):
-        pygame.draw.circle(surface, BLACK, self.pos, SDNode.RADIUS)
+    def draw(self, surface, success):
+        pygame.draw.circle(surface, BLACK, self.pos, self.RADIUS)
+        pygame.draw.circle(surface, GREEN if success else BLUE,
+                           self.pos, 0.9*SDNode.RADIUS)
 
     def drag(self, delta):
         self.pos = tuple_addition(self.pos, delta)
+
+    def randomise_position(self):
+        self.pos = (random.randint(round(0.1*MINIGAME_WIDTH), round(0.9*MINIGAME_WIDTH)),
+                    random.randint(round(0.1*MINIGAME_HEIGHT), round(0.9*MINIGAME_HEIGHT)))
 
 
 def tuple_addition(a, b):
