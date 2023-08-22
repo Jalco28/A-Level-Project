@@ -630,7 +630,8 @@ class SelectDrivers(MiniGame):
             if intersect:
                 self.intersections.append(intersect)
 
-        self.info_bar.change_custom_field_value('Line Crossings', len(self.intersections))
+        self.info_bar.change_custom_field_value(
+            'Line Crossings', len(self.intersections))
 
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
@@ -727,10 +728,10 @@ class SelectDrivers(MiniGame):
                     self.connections.append(new_connection)
                 attempts_left -= 1
 
-
         for node in self.nodes:
             node.randomise_position()
-        self.info_bar.add_custom_field('Line Crossings', self.count_intersections())
+        self.info_bar.add_custom_field(
+            'Line Crossings', self.count_intersections())
 
     def count_intersections(self):
         num_intersections = 0
@@ -752,8 +753,10 @@ class SelectDrivers(MiniGame):
             if len(self.intersections) == 0:
                 self.success = True
                 self.running = False
-                self.ending_message = self.font.render('Puzzle Completed!', True, BLACK, GREY)
-                self.ending_message_rect = self.ending_message.get_rect(center=self.sub_rect.center)
+                self.ending_message = self.font.render(
+                    'Puzzle Completed!', True, BLACK, GREY)
+                self.ending_message_rect = self.ending_message.get_rect(
+                    center=self.sub_rect.center)
 
 
 class UserAuthentication(MiniGame):

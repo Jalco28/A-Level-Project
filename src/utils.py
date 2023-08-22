@@ -171,7 +171,8 @@ class TimeInfoBar:
         for field in self.custom_fields.items():
             key = field[0]
             value = field[1]
-            value = (value[0], value[1], self.font.render(f'{key}: {value[0]}', True, BLACK, GREY))
+            value = (value[0], value[1], self.font.render(
+                f'{key}: {value[0]}', True, BLACK, GREY))
             self.custom_fields[key] = value
 
     def draw_custom_fields(self, screen: pygame.Surface):

@@ -35,12 +35,12 @@ class InfoBar:
         self.mode_rect = pygame.Rect(
             0, 0, mode_text.get_width(), mode_text.get_height())
         self.mode_rect.midleft = (self.rect.left+0.02 *
-                             self.rect.width, self.rect.centery)
+                                  self.rect.width, self.rect.centery)
 
         self.score_rect = pygame.Rect(
             0, 0, score_text.get_width(), score_text.get_height())
         self.score_rect.midleft = (self.rect.left+0.4 *
-                              self.rect.width, self.rect.centery)
+                                   self.rect.width, self.rect.centery)
 
         self.difficulty_rect = pygame.Rect(
             0, 0, difficulty_text.get_width(), difficulty_text.get_height())
@@ -86,10 +86,10 @@ class FrustrationBar:
         self.FONT_SIZE = 30
         self.font = pygame.font.SysFont("Arial", self.FONT_SIZE)
 
-
         self.label = self.font.render('User Frustration', True, BLACK, WHITE)
         self.label = pygame.transform.rotate(self.label, 270)
-        self.text_rect = pygame.Rect(0, 0, self.label.get_width(), self.label.get_height())
+        self.text_rect = pygame.Rect(
+            0, 0, self.label.get_width(), self.label.get_height())
         self.text_rect.center = (self.rect.centerx+63, self.rect.centery)
 
     def draw(self, screen: pygame.Surface):
@@ -414,7 +414,6 @@ class DoorsOS:
 
                 else:
                     self.current_mini_game.take_event(event)
-
 
             if not self.game_running:
                 break
