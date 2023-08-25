@@ -504,7 +504,7 @@ class DDBlock:
         self.setup_collision_rects()
 
 
-class SDNode:
+class ODNode:
     RADIUS = 15
 
     def __init__(self, pos):
@@ -515,19 +515,19 @@ class SDNode:
         return str(self.pos)
 
     def define_partners(self, partners):
-        self.partners: list[SDNode] = partners
+        self.partners: list[ODNode] = partners
 
     def draw(self, surface, success):
         pygame.draw.circle(surface, BLACK, self.pos, self.RADIUS)
         pygame.draw.circle(surface, GREEN if success else BLUE,
-                           self.pos, 0.9*SDNode.RADIUS)
+                           self.pos, 0.9*ODNode.RADIUS)
 
     def drag(self, delta):
         self.pos = tuple_addition(self.pos, delta)
 
     def randomise_position(self):
-        self.pos = (random.randint(round(0.1*MINIGAME_WIDTH), round(0.9*MINIGAME_WIDTH)),
-                    random.randint(round(0.1*MINIGAME_HEIGHT), round(0.9*MINIGAME_HEIGHT)))
+        self.pos = (random.randint(round(0.2*MINIGAME_WIDTH), round(0.8*MINIGAME_WIDTH)),
+                    random.randint(round(0.2*MINIGAME_HEIGHT), round(0.8*MINIGAME_HEIGHT)))
 
 
 def tuple_addition(a, b):

@@ -643,7 +643,7 @@ class OrganiseDrivers(MiniGame):
                 continue
 
             for node in reversed(copy(self.nodes)):  # Check in reverse draw order
-                if tuple_pythag(tuple_addition((-x, -y), node.pos)) <= SDNode.RADIUS:
+                if tuple_pythag(tuple_addition((-x, -y), node.pos)) <= ODNode.RADIUS:
                     # Move node to end of list
                     # self.nodes.append(self.nodes.pop(self.nodes.index(node)))
                     node.grabbed = True
@@ -657,7 +657,7 @@ class OrganiseDrivers(MiniGame):
         return self.connections+[tuple(reversed(x)) for x in self.connections]
 
     def setup_nodes(self):
-        self.nodes: list[SDNode] = []
+        self.nodes: list[ODNode] = []
         self.connections = []
         radius = 340
         initial_nodes = random.randint(4, 7)
@@ -670,7 +670,7 @@ class OrganiseDrivers(MiniGame):
         abs_coords = [tuple_addition(
             (MINIGAME_WIDTH/2, MINIGAME_HEIGHT/2), coord) for coord in rel_coords]
         for coord in abs_coords:
-            self.nodes.append(SDNode(coord))
+            self.nodes.append(ODNode(coord))
 
         # Connect all initial nodes
         for connection in pairwise(range(initial_nodes)):
@@ -703,8 +703,8 @@ class OrganiseDrivers(MiniGame):
 
         # Add two nodes in middle
         self.nodes.extend([
-            SDNode(((MINIGAME_WIDTH/2)+30, (MINIGAME_HEIGHT/2)+30)),
-            SDNode(((MINIGAME_WIDTH/2)-30, (MINIGAME_HEIGHT/2)-30))
+            ODNode(((MINIGAME_WIDTH/2)+30, (MINIGAME_HEIGHT/2)+30)),
+            ODNode(((MINIGAME_WIDTH/2)-30, (MINIGAME_HEIGHT/2)-30))
         ])
 
         # Try and connect extra nodes
