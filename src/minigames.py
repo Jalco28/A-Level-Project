@@ -525,7 +525,7 @@ class DefragDisk(MiniGame):
             block.go_home()
 
 
-class SelectDrivers(MiniGame):
+class OrganiseDrivers(MiniGame):
     @staticmethod
     def convert_top_left_to_cartesian(coord: tuple[int]):
         return (coord[0], MINIGAME_HEIGHT-coord[1])
@@ -547,32 +547,32 @@ class SelectDrivers(MiniGame):
         """2D specialisation of Ronald Goldman's 3D line intersection
             Returns False for no intersection or infinite intersection, tuple for unique intersection point"""
         p1 = pygame.math.Vector2(
-            SelectDrivers.convert_top_left_to_cartesian(p1))
+            OrganiseDrivers.convert_top_left_to_cartesian(p1))
         p2 = pygame.math.Vector2(
-            SelectDrivers.convert_top_left_to_cartesian(p2))
+            OrganiseDrivers.convert_top_left_to_cartesian(p2))
         p3 = pygame.math.Vector2(
-            SelectDrivers.convert_top_left_to_cartesian(p3))
+            OrganiseDrivers.convert_top_left_to_cartesian(p3))
         p4 = pygame.math.Vector2(
-            SelectDrivers.convert_top_left_to_cartesian(p4))
+            OrganiseDrivers.convert_top_left_to_cartesian(p4))
         l1_delta = p2-p1
         l2_delta = p4-p3
 
         try:
-            lamda = SelectDrivers.cross_product_2d(
-                p3-p1, l2_delta/SelectDrivers.cross_product_2d(l1_delta, l2_delta))
-            mu = SelectDrivers.cross_product_2d(
-                p3-p1, l1_delta/SelectDrivers.cross_product_2d(l1_delta, l2_delta))
+            lamda = OrganiseDrivers.cross_product_2d(
+                p3-p1, l2_delta/OrganiseDrivers.cross_product_2d(l1_delta, l2_delta))
+            mu = OrganiseDrivers.cross_product_2d(
+                p3-p1, l1_delta/OrganiseDrivers.cross_product_2d(l1_delta, l2_delta))
         except ZeroDivisionError:  # Seems to happen when collinear
             return False
 
         # Lines are collinear
-        if SelectDrivers.cross_product_2d(l1_delta, l2_delta) == 0 and SelectDrivers.cross_product_2d(p3-p1, l1_delta) == 0:
+        if OrganiseDrivers.cross_product_2d(l1_delta, l2_delta) == 0 and OrganiseDrivers.cross_product_2d(p3-p1, l1_delta) == 0:
             return False
         # Lines are parallel and non-intersecting
-        elif SelectDrivers.cross_product_2d(l1_delta, l2_delta) == 0 and SelectDrivers.cross_product_2d(p3-p1, l1_delta) != 0:
+        elif OrganiseDrivers.cross_product_2d(l1_delta, l2_delta) == 0 and OrganiseDrivers.cross_product_2d(p3-p1, l1_delta) != 0:
             return False
         # Intersect at unique point
-        elif SelectDrivers.cross_product_2d(l1_delta, l2_delta) != 0 and (0 <= lamda <= 1) and (0 <= mu <= 1):
+        elif OrganiseDrivers.cross_product_2d(l1_delta, l2_delta) != 0 and (0 <= lamda <= 1) and (0 <= mu <= 1):
             if DEBUG:
                 assert p1 + lamda*l1_delta == p3 + mu*l2_delta
             intersect_point = p1 + lamda*l1_delta
@@ -581,7 +581,7 @@ class SelectDrivers(MiniGame):
             if intersect_point in [p1, p2, p3, p4]:
                 return False
             else:
-                return SelectDrivers.convert_cartesian_to_top_left(intersect_point)
+                return OrganiseDrivers.convert_cartesian_to_top_left(intersect_point)
         # Also lines are parallel and non-intersecting
         else:
             return False
@@ -788,7 +788,7 @@ class UserAuthentication(MiniGame):
                 continue
 
 
-class FileAccessControl(MiniGame):
+class BackupFiles(MiniGame):
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
         self.label1 = self.font.render(

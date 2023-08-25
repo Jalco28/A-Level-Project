@@ -158,9 +158,9 @@ class Task:
         'Register Mouse Inputs': 5,
         'Memory Management': 3,
         'Defrag Disk': 2,
-        'Select Drivers': 6,
+        'Organise Drivers': 6,
         'User Authentication': 7,
-        'File Access Control': 5,
+        'Backup Files': 5,
         'Data encryption': 6,
         'Data compression': 4
     }
@@ -168,9 +168,9 @@ class Task:
         'Register Mouse Inputs',
         'Memory Management',
         'Defrag Disk',
-        'Select Drivers',
+        'Organise Drivers',
         'User Authentication',
-        'File Access Control',
+        'Backup Files',
         'Data encryption',
         'Data compression'
     ]
@@ -178,9 +178,9 @@ class Task:
         'Register Mouse Inputs': minigames.RegisterMouseInputs,
         'Memory Management': minigames.MemoryManagement,
         'Defrag Disk': minigames.DefragDisk,
-        'Select Drivers': minigames.SelectDrivers,
+        'Organise Drivers': minigames.OrganiseDrivers,
         'User Authentication': minigames.UserAuthentication,
-        'File Access Control': minigames.FileAccessControl,
+        'Backup Files': minigames.BackupFiles,
         'Data encryption': minigames.DataEncryption,
         'Data compression': minigames.DataCompression
     }
