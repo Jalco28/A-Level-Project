@@ -19,6 +19,7 @@ class MiniGame:
             0, 0, MINIGAME_WIDTH, MINIGAME_HEIGHT)
         self.clicks_to_handle = []
         self.font = pygame.font.SysFont('Arial', 70)
+        self.instruction_font = pygame.font.SysFont('Arial', 40)
         self.forfeit_button = Button(
             'Forfeit', self.sub_rect.right-70, self.sub_rect.top+40, BLACK, GREY, 40, self.question_forfeit)
         self.confirm_forfeit_button = Button(
@@ -590,6 +591,8 @@ class OrganiseDrivers(MiniGame):
         super().__init__(global_info_bar)
         self.intersections = []
         self.info_bar = TimeInfoBar(20, global_info_bar)
+        self.instruction_text = self.instruction_font.render('Move the circles to remove line crossings!', True, BLACK, WHITE)
+        self.instruction_rect = self.instruction_text.get_rect(center=(MINIGAME_WIDTH/2, 100))
         self.setup_nodes()
 
     def draw(self, screen: pygame.Surface):
@@ -597,10 +600,11 @@ class OrganiseDrivers(MiniGame):
             return self.draw_ending_screen(screen)
 
         self.sub_surface.fill(WHITE)
+        self.sub_surface.blit(self.instruction_text, self.instruction_rect)
 
         if DEBUG:
             for node in self.nodes:
-                node.draw(self.sub_surface)
+                node.draw(self.sub_surface, len(self.intersections) == 0)
 
             for connection in self.connections:
                 pygame.draw.aaline(self.sub_surface, RED,
@@ -728,10 +732,13 @@ class OrganiseDrivers(MiniGame):
                     self.connections.append(new_connection)
                 attempts_left -= 1
 
-        for node in self.nodes:
-            node.randomise_position()
+        while self.count_intersections() == 0:
+            for node in self.nodes:
+                node.randomise_position()
+
         self.info_bar.add_custom_field(
             'Line Crossings', self.count_intersections())
+        self.update()
 
     def count_intersections(self):
         num_intersections = 0
