@@ -591,8 +591,10 @@ class OrganiseDrivers(MiniGame):
         super().__init__(global_info_bar)
         self.intersections = []
         self.info_bar = TimeInfoBar(20, global_info_bar)
-        self.instruction_text = self.instruction_font.render('Move the circles to remove line crossings!', True, BLACK, WHITE)
-        self.instruction_rect = self.instruction_text.get_rect(center=(MINIGAME_WIDTH/2, 100))
+        self.instruction_text = self.instruction_font.render(
+            'Move the circles to remove line crossings!', True, BLACK, WHITE)
+        self.instruction_rect = self.instruction_text.get_rect(
+            center=(MINIGAME_WIDTH/2, 100))
         self.setup_nodes()
 
     def draw(self, screen: pygame.Surface):
