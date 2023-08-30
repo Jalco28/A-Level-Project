@@ -514,11 +514,12 @@ class DefragDisk(MiniGame):
                     block.drag(event.rel)
 
         if event.type == pygame.MOUSEBUTTONUP:
-            for block in self.blocks:
-                if block.grabbed:
-                    newely_occupied_tiles = block.ungrab(self.occupied_tiles)
-                    if newely_occupied_tiles is not None:
-                        self.occupied_tiles.update(newely_occupied_tiles)
+            if event.button == 1:
+                for block in self.blocks:
+                    if block.grabbed:
+                        newly_occupied_tiles = block.ungrab(self.occupied_tiles)
+                        if newly_occupied_tiles is not None:
+                            self.occupied_tiles.update(newly_occupied_tiles)
 
     def reset_blocks(self):
         self.occupied_tiles = set()
@@ -757,15 +758,16 @@ class OrganiseDrivers(MiniGame):
                 if node.grabbed:
                     node.drag(event.rel)
         if event.type == pygame.MOUSEBUTTONUP:
-            for node in self.nodes:
-                node.grabbed = False
-            if len(self.intersections) == 0:
-                self.success = True
-                self.running = False
-                self.ending_message = self.font.render(
-                    'Puzzle Completed!', True, BLACK, GREY)
-                self.ending_message_rect = self.ending_message.get_rect(
-                    center=self.sub_rect.center)
+            if event.button == 1:
+                for node in self.nodes:
+                    node.grabbed = False
+                if len(self.intersections) == 0:
+                    self.success = True
+                    self.running = False
+                    self.ending_message = self.font.render(
+                        'Puzzle Completed!', True, BLACK, GREY)
+                    self.ending_message_rect = self.ending_message.get_rect(
+                        center=self.sub_rect.center)
 
 
 class UserAuthentication(MiniGame):
