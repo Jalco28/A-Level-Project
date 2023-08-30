@@ -120,7 +120,7 @@ class TaskList:
             SCREEN_WIDTH*0.715, SCREEN_HEIGHT*0.13, SCREEN_WIDTH*0.2, SCREEN_HEIGHT * 0.85+1)
         self.tasks: list[Task] = []
         self.clicks_to_handle = []
-        if DEBUG:
+        if DEBUG or main_menu.game.mode == ZEN_MODE:
             for task in Task.TASK_DESCRIPTIONS:
                 self.add_task(task)
 
@@ -143,7 +143,7 @@ class TaskList:
             self.tasks.append(Task(len(self.tasks), self, description))
 
     def remove_task(self, index):
-        if DEBUG:
+        if DEBUG or main_menu.game.mode == ZEN_MODE:
             return
         self.tasks.pop(index)
         for idx, task in enumerate(self.tasks):
