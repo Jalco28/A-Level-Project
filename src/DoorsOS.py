@@ -390,6 +390,7 @@ class DoorsOS:
         escape_exit_code = 0
         while self.game_running:
             for event in pygame.event.get():
+                self.current_mini_game.take_event(event)
 
                 if event.type == pygame.QUIT:
                     self.end_game(True)
@@ -411,9 +412,6 @@ class DoorsOS:
 
                 elif event.type == pygame.MOUSEWHEEL:
                     self.frustration_bar.frustration_level += event.y
-
-                else:
-                    self.current_mini_game.take_event(event)
 
             if not self.game_running:
                 break
