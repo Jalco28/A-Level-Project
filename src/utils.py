@@ -530,6 +530,105 @@ class ODNode:
                     random.randint(round(0.2*MINIGAME_HEIGHT), round(0.8*MINIGAME_HEIGHT)))
 
 
+class UAPassword:
+    def __init__(self, text, start_pos):
+        self.hashinator_input_location = (583, 314)
+        self.snap_locations = [self.hashinator_input_location, start_pos]
+        self.font = pygame.font.SysFont('Arial', 24)
+        self.text = text
+        self.rendered_text = self.font.render(self.text, True, BLACK, GREY)
+        self.rect = pygame.Rect(*start_pos, 170, 35)
+        self.text_rect = self.rendered_text.get_rect(center=self.rect.center)
+        self.grabbed = False
+
+    def draw(self, screen: pygame.Surface):
+        pygame.draw.rect(screen, BLACK, self.rect)
+        pygame.draw.rect(screen, GREY, self.rect.inflate(-6, -6))
+        screen.blit(self.rendered_text, self.text_rect)
+
+    def drag(self, delta):
+        self.rect.move_ip(*delta)
+        self.text_rect.move_ip(*delta)
+
+    def ungrab(self):
+        """Returns true if snapped to hashinator"""
+        self.grabbed = False
+        for location in self.snap_locations:
+            snap_tolerance = 30
+            if tuple_pythag(tuple_addition((-location[0], -location[1]), self.rect.topleft)) < snap_tolerance:
+                self.rect.topleft = location
+                self.text_rect.center = self.rect.center
+                if location == self.hashinator_input_location:
+                    return True
+
+
+class UARequest:
+    def __init__(self, username, password, failed_attempts, correct_repsonse):
+        self.correct_response = correct_repsonse
+        self.title_font = pygame.font.SysFont('Arial', 50)
+        self.body_font = pygame.font.SysFont('Arial', 30)
+        self.username = username
+        self.failed_attempts = failed_attempts
+        self.rect = pygame.Rect(0, 0, 350, 200)
+        self.rect.center = (200, 400)
+
+        self.title_text = self.title_font.render('Login Request', True, BLACK)
+        self.title_text_rect = self.title_text.get_rect(
+            center=(self.rect.centerx, self.rect.top+30))
+
+        self.username_text = self.body_font.render(
+            f'Username: {self.username}', True, BLACK, GREY)
+        self.username_text_rect = self.username_text.get_rect(
+            topleft=(self.rect.left+20, self.rect.top+70))
+
+        self.password_text = self.body_font.render(
+            'Password:', True, BLACK, GREY)
+        self.password_text_rect = self.password_text.get_rect(
+            topleft=(self.rect.left+20, self.rect.top+110))
+        self.password = UAPassword(
+            password, (self.password_text_rect.right+10, self.password_text_rect.top+2))
+        self.password_start_rect = pygame.Rect(
+            self.password_text_rect.right+10, self.password_text_rect.top+2, 170, 35)
+
+        self.failed_attempts_text = self.body_font.render(
+            f'Failed Attempts: {self.failed_attempts}', True, BLACK, GREY)
+        self.failed_attempts_text_rect = self.failed_attempts_text.get_rect(
+            topleft=(self.rect.left+20, self.rect.top+150))
+
+    def draw(self, screen: pygame.Surface):
+        pygame.draw.rect(screen, BLACK, self.rect)
+        pygame.draw.rect(screen, GREY, self.rect.inflate(-6, -6))
+        pygame.draw.rect(screen, WHITE, self.password_start_rect)
+        screen.blit(self.title_text, self.title_text_rect)
+        screen.blit(self.username_text, self.username_text_rect)
+        screen.blit(self.password_text, self.password_text_rect)
+        screen.blit(self.failed_attempts_text, self.failed_attempts_text_rect)
+        self.password.draw(screen)
+
+
+class UAButton(Image):
+    def __init__(self, center_x, center_y, image_name, action):
+        super().__init__(center_x, center_y, image_name)
+        self.action = action
+        self.highlight_start_time = 0
+        self.highlight_colour = WHITE
+        self.highlighted = False
+
+    def highlight(self, colour):
+        self.highlight_start_time = time.time()
+        self.highlight_colour = colour
+        self.highlighted = True
+
+    def draw(self, screen: pygame.Surface):
+        if self.highlighted:
+            if time.time()-self.highlight_start_time < 0.7:
+                pygame.draw.circle(
+                    screen, self.highlight_colour, self.rect.center, 70)
+            else:
+                self.highlighted = False
+        screen.blit(self.image, self.rect)
+
+
 def tuple_addition(a, b):
     return tuple(sum(x) for x in zip(a, b))
 

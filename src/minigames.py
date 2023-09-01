@@ -1,3 +1,4 @@
+from hashlib import sha1
 import pygame
 from constants import *
 from utils import *
@@ -517,7 +518,8 @@ class DefragDisk(MiniGame):
             if event.button == 1:
                 for block in self.blocks:
                     if block.grabbed:
-                        newly_occupied_tiles = block.ungrab(self.occupied_tiles)
+                        newly_occupied_tiles = block.ungrab(
+                            self.occupied_tiles)
                         if newly_occupied_tiles is not None:
                             self.occupied_tiles.update(newly_occupied_tiles)
 
@@ -773,22 +775,194 @@ class OrganiseDrivers(MiniGame):
 class UserAuthentication(MiniGame):
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
-        self.label1 = self.font.render(
-            'User Authentication', True, BLACK, GREY)
-        self.label1_rect = self.label1.get_rect(center=self.sub_rect.center)
+        self.info_bar = STTInfoBar(10, 60, global_info_bar)
+        self.small_font = pygame.font.SysFont('Arial', 29)
+        button_offset = 150
+        button_center = (MINIGAME_WIDTH/2)-75
+        self.tick = UAButton(button_center-button_offset,
+                             700, r'images/UA/tick.png', self.tick_response)
+        self.cross = UAButton(button_center, 700,
+                              r'images/UA/cross.png', self.cross_response)
+        self.lock = UAButton(button_center+button_offset,
+                             700, r'images/UA/lock.png', self.lock_response)
+        self.buttons = [self.tick, self.cross, self.lock]
+        self.clipboard = Image(1000, 410, r'images/UA/clipboard.png')
+        self.hashinator = Image(600, 400, r'images/UA/hashinator.png')
+        self.hashinator_text = ''
+
+        self.instruction_text = self.small_font.render(
+            'System Policy: Accounts must be locked on the third incorrect login attempt', True, BLACK, WHITE)
+        self.instruction_text_rect = self.instruction_text.get_rect(
+            center=(410, 140))
+
+        self.setup_users()
+        self.setup_clipboard_text_surf()
+        self.new_request()
+
+    def setup_users(self):
+        active_users = set()
+        while len(active_users) < 10:
+            active_users.add(random.choice(UA_USERNAMES))
+        self.inactive_users = list(set(UA_USERNAMES).difference(active_users))
+        active_users = list(active_users)
+        self.failed_attempts = {user: random.choice(
+            [0, 0, 0, 1, 1, 1, 2, 2]) for user in UA_USERNAMES}
+
+        active_passwords = set()
+        while len(active_passwords) < 10:
+            active_passwords.add(random.choice(UA_PASSWORDS))
+        self.inactive_passwords = list(
+            set(UA_PASSWORDS).difference(active_passwords))
+        active_passwords = list(active_passwords)
+
+        self.user_dict = {}
+        for i in range(10):
+            self.user_dict[active_users.pop(random.randint(0, len(
+                active_users)-1))] = active_passwords.pop(random.randint(0, len(active_passwords)-1))
+
+        self.hash_dict = {password: sha1(password.encode(
+            'utf-8')).hexdigest()[0:10] for password in UA_PASSWORDS}
+
+    def new_request(self):
+        self.hide_hashinator_output()
+        registered_user = random.randint(1, 100) <= 70
+        if registered_user:
+            username = random.choice(list(self.user_dict.keys()))
+            password_correct = random.randint(1, 100) <= 60
+            password = self.user_dict[username]
+            if not password_correct:
+                while password == self.user_dict[username]:
+                    password = random.choice(UA_PASSWORDS)
+        else:
+            username = random.choice(self.inactive_users)
+            password = random.choice(UA_PASSWORDS)
+        failed_attempts = self.failed_attempts[username]
+
+        if registered_user and password_correct:
+            correct_response = UA_TICK
+            self.failed_attempts[username] = 0
+        elif failed_attempts == 2:
+            correct_response = UA_LOCK
+            self.failed_attempts[username] += 10
+            UA_USERNAMES.remove(username)
+            try:
+                self.user_dict.pop(username)
+            except KeyError:  # User was not active
+                pass
+        else:
+            correct_response = UA_CROSS
+            self.failed_attempts[username] += 1
+
+        self.request = UARequest(
+            username, password, failed_attempts, correct_response)
+
+    def tick_response(self):
+        if self.request.correct_response == UA_TICK:
+            self.tick.highlight(GREEN)
+            self.info_bar.add_score(1)
+        elif self.request.correct_response == UA_LOCK:
+            self.lock.highlight(GREEN)
+            self.tick.highlight(RED)
+            self.info_bar.subtract_score(3)
+        elif self.request.correct_response == UA_CROSS:
+            self.cross.highlight(GREEN)
+            self.tick.highlight(RED)
+            self.info_bar.subtract_score(2)
+        self.new_request()
+
+    def cross_response(self):
+        if self.request.correct_response == UA_CROSS:
+            self.cross.highlight(GREEN)
+            self.info_bar.add_score(2)
+        elif self.request.correct_response == UA_TICK:
+            self.tick.highlight(GREEN)
+            self.cross.highlight(RED)
+            self.info_bar.subtract_score(1)
+        elif self.request.correct_response == UA_LOCK:
+            self.lock.highlight(GREEN)
+            self.cross.highlight(RED)
+            self.info_bar.subtract_score(2)
+        self.new_request()
+
+    def lock_response(self):
+        if self.request.correct_response == UA_LOCK:
+            self.lock.highlight(GREEN)
+            self.info_bar.add_score(3)
+        elif self.request.correct_response == UA_TICK:
+            self.tick.highlight(GREEN)
+            self.lock.highlight(RED)
+            self.info_bar.subtract_score(3)
+        elif self.request.correct_response == UA_CROSS:
+            self.cross.highlight(GREEN)
+            self.lock.highlight(RED)
+            self.info_bar.subtract_score(1)
+        self.new_request()
+
+    def draw_clipboard_text(self, screen: pygame.Surface):
+        left = 865
+        top = 220
+        screen.blit(self.clipboard_text_surf, (left, top))
+
+    def setup_clipboard_text_surf(self):
+        top = 220
+        left = 865
+        hdelta = 135
+        vdelta = 40
+        users = list(self.user_dict.keys())
+        passwords = list(self.user_dict.values())
+        last_text_rect = self.small_font.render(
+            self.hash_dict[passwords[-1]], True, BLACK).get_rect(topleft=(left+hdelta, top+9*vdelta))
+
+        self.clipboard_text_surf = pygame.Surface(
+            tuple_addition((-left, -top), (last_text_rect.right+30, last_text_rect.bottom)),  pygame.SRCALPHA, 32)
+        for i in range(len(self.user_dict)):
+            self.clipboard_text_surf.blit(self.small_font.render(
+                users[i], True, BLACK), (0, i*vdelta))
+            self.clipboard_text_surf.blit(self.small_font.render(
+                self.hash_dict[passwords[i]], True, BLACK), (hdelta, i*vdelta))
+
+    @property
+    def hashinator_text_rect(self):
+        return self.rendered_hashinator_text.get_rect(topleft=(590, 450))
+
+    @property
+    def rendered_hashinator_text(self):
+        return self.small_font.render(self.hashinator_text, True, BLACK, GREY)
+
+    def show_hashinator_output(self):
+        self.hashinator_text = self.hash_dict[self.request.password.text]
+
+    def hide_hashinator_output(self):
+        self.hashinator_text = ''
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
             return self.draw_ending_screen(screen)
 
-        self.sub_surface.fill(GREY)
-        self.sub_surface.blit(self.label1, self.label1_rect)
+        self.sub_surface.fill(WHITE)
 
+        self.sub_surface.blit(self.instruction_text,
+                              self.instruction_text_rect)
+        self.tick.draw(self.sub_surface)
+        self.cross.draw(self.sub_surface)
+        self.lock.draw(self.sub_surface)
+        self.clipboard.draw(self.sub_surface)
+        self.draw_clipboard_text(self.sub_surface)
+        self.hashinator.draw(self.sub_surface)
+        self.sub_surface.blit(self.rendered_hashinator_text,
+                              self.hashinator_text_rect)
+        self.request.draw(self.sub_surface)
+
+        self.info_bar.draw(self.sub_surface)
         self.common_drawing(screen)
 
     def update(self):
         if not self.running:
             return self.update_ending_sequence()
+
+        if not DEBUG:
+            self.check_time_and_target()
+
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
             click_used = False
@@ -797,6 +971,31 @@ class UserAuthentication(MiniGame):
                 x, y) or self.check_info_bar_clicked(x, y)
             if click_used:
                 continue
+
+            if self.request.password.rect.collidepoint(x, y):
+                self.request.password.grabbed = True
+                self.hide_hashinator_output()
+                click_used = True
+            if click_used:
+                continue
+
+            for button in self.buttons:
+                if not click_used and button.rect.collidepoint(x, y):
+                    button.action()
+                    click_used = True
+            if click_used:
+                continue
+
+    def take_event(self, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                snapped_to_hashinator = self.request.password.ungrab()
+                if snapped_to_hashinator:
+                    self.show_hashinator_output()
+
+        if event.type == pygame.MOUSEMOTION:
+            if self.request.password.grabbed:
+                self.request.password.drag(event.rel)
 
 
 class BackupFiles(MiniGame):

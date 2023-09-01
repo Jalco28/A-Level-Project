@@ -17,4 +17,47 @@ DD_TILE_CENTERS = [(429, 238), (429, 288), (429, 338), (429, 388), (429, 438), (
     579, 588), (629, 238), (629, 288), (629, 338), (629, 388), (629, 438), (629, 488), (629, 538), (629, 588), (679, 238), (679, 288), (679, 338), (679, 388), (679, 438), (679, 488), (679, 538), (679, 588), (729, 238), (729, 288), (729, 338), (729, 388), (729, 438), (729, 488), (729, 538), (729, 588), (779, 238), (779, 288), (779, 338), (779, 388), (779, 438), (779, 488), (779, 538), (779, 588)]
 DD_TILE_CENTERS_TO_COORDS = dict(
     zip(DD_TILE_CENTERS, ((x, y) for x in range(8) for y in range(8))))
+UA_USERNAMES = ['Alice',
+                'Bob',
+                'James',
+                'Jodi',
+                'Omar',
+                'Callum',
+                'George',
+                'Lucas',
+                'Ben',
+                'Sasha',
+                'Oscar',
+                'Anthony',
+                'Jack',
+                'Finn',
+                'Emily',
+                'Holly',
+                'Jayden',
+                'Katie',
+                'Leo',
+                'Sam']
+UA_PASSWORDS = ['password',
+                'qwerty',
+                'p@$$w0rd',
+                'letmein',
+                'dragon',
+                'sunshine',
+                'scratch_jr',
+                '12345',
+                'f00tb@all',
+                '3302',
+                'iamk00l_',
+                'admin',
+                'hello',
+                'abc123',
+                'qazwsx',
+                'welcome',
+                'k6e^DJA',
+                'BaTmaN',
+                'iluvdogs',
+                'x@6a8qDU']
+UA_TICK = 0
+UA_CROSS = 1
+UA_LOCK = 2
 DEBUG = False
