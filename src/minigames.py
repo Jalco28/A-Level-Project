@@ -5,6 +5,8 @@ from utils import *
 from copy import copy, deepcopy
 from itertools import cycle, combinations, pairwise
 from math import cos, pi, sin
+from functools import reduce
+import operator
 
 
 class MiniGame:
@@ -1001,30 +1003,186 @@ class UserAuthentication(MiniGame):
 class BackupFiles(MiniGame):
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
-        self.label1 = self.font.render(
-            'File Access Control', True, BLACK, GREY)
-        self.label1_rect = self.label1.get_rect(center=self.sub_rect.center)
+        self.instruction_text = self.instruction_font.render(
+            'Watch the sequence, then use WASD to repeat it', True, BLACK, WHITE)
+        self.instruction_text_rect = self.instruction_text.get_rect(
+            center=(MINIGAME_WIDTH/2, 40))
+        self.current_phase = BF_WATCH
+        self.watch_phase_end = -1
+        self.keys_previously_pressed = set()
+        self.keys_currently_pressed = set()
+        self.last_index_revealed = 0
+        self.setup_dots()
+        self.setup_arrows()
+        self.setup_sequence()
+        self.schedule_sequence(self.last_index_revealed+1)
+
+    @property
+    def phase_text(self):
+        return self.instruction_font.render(f'Current phase: {"Watch" if self.current_phase == BF_WATCH else "Copy"}', True, BLACK, WHITE)
+
+    def setup_arrows(self):
+        arrow_spacing = 220
+        vcenter = MINIGAME_HEIGHT/2+80
+        hcenter = MINIGAME_WIDTH/2
+        self.left = BFArrow(
+            (hcenter-arrow_spacing, vcenter), 'left', self.global_info_bar)
+        self.right = BFArrow(
+            (hcenter+arrow_spacing, vcenter), 'right', self.global_info_bar)
+        self.up = BFArrow(
+            (hcenter, vcenter-arrow_spacing), 'up', self.global_info_bar)
+        self.down = BFArrow(
+            (hcenter, vcenter+arrow_spacing), 'down', self.global_info_bar)
+        self.arrows = {'left': self.left,
+                       'right': self.right,
+                       'up': self.up,
+                       'down': self.down}
+
+    def setup_dots(self):
+        x = 403
+        x_delta = 50
+        y = 160
+        self.dots: dict[int, tuple[tuple[int, int], tuple[int, int, int]]] = {}
+        for i in range(10):
+            #index: (pos, colour)
+            self.dots[i] = ((x+i*x_delta, y), WHITE)
+
+    def setup_sequence(self):
+        buttons = ['u', 'd', 'l', 'r']
+        self.sequence = []
+        for i in range(5):
+            self.sequence.append(random.choice(buttons))
+        for i in range(3):
+            new = copy(buttons)
+            new.pop(random.randint(0, 3))
+            new.pop(random.randint(0, 2))
+            self.sequence.append(''.join(sorted(reduce(operator.add, new))))
+        for i in range(2):
+            new = copy(buttons)
+            new.pop(random.randint(0, 3))
+            self.sequence.append(''.join(sorted(reduce(operator.add, new))))
+
+    def set_dot_colour(self, index, colour):
+        self.dots[index] = (self.dots[index][0], colour)
+
+    def schedule_sequence(self, length):
+        self.current_phase = BF_WATCH
+        for i in range(length):
+            self.set_dot_colour(i, GREY)
+        highlight_duration = 1.2
+        spacing = highlight_duration+0.5
+        start_time = self.global_info_bar.score+spacing
+        self.watch_phase_end = (start_time+(length-1)
+                                * spacing)+highlight_duration+0.5
+        for i in range(length):
+            buttons = self.sequence[i]
+            for button in buttons:
+                if button == 'u':
+                    self.up.scheduled_highlights.append(
+                        (start_time+i*spacing, (start_time+i*spacing)+highlight_duration))
+                elif button == 'l':
+                    self.left.scheduled_highlights.append(
+                        (start_time+i*spacing, (start_time+i*spacing)+highlight_duration))
+                elif button == 'd':
+                    self.down.scheduled_highlights.append(
+                        (start_time+i*spacing, (start_time+i*spacing)+highlight_duration))
+                elif button == 'r':
+                    self.right.scheduled_highlights.append(
+                        (start_time+i*spacing, (start_time+i*spacing)+highlight_duration))
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
             return self.draw_ending_screen(screen)
+        self.sub_surface.fill(WHITE)
 
-        self.sub_surface.fill(GREY)
-        self.sub_surface.blit(self.label1, self.label1_rect)
-
+        for arrow in self.arrows.values():
+            arrow.draw(self.sub_surface, self.current_phase)
+        self.sub_surface.blit(self.instruction_text,
+                              self.instruction_text_rect)
+        self.sub_surface.blit(self.phase_text, (450, 80))
+        for dot in self.dots.items():
+            pygame.draw.circle(self.sub_surface, dot[1][1], dot[1][0], 10)
         self.common_drawing(screen)
 
     def update(self):
         if not self.running:
             return self.update_ending_sequence()
+        for arrow in self.arrows.values():
+            arrow.update()
+
+        if self.current_phase == BF_WATCH and self.watch_phase_end < self.global_info_bar.score:
+            self.current_phase = BF_COPY
+            self.input_index = 0
+
+        if self.current_phase == BF_COPY:
+            if len(self.keys_currently_pressed) == 0 and len(self.keys_previously_pressed) != 0:
+                inputted_keys = ''.join(
+                    sorted(reduce(operator.add, self.keys_previously_pressed)))
+                self.keys_previously_pressed = set()
+                if inputted_keys == self.sequence[self.input_index]:
+                    self.set_dot_colour(self.input_index, GREEN)
+                    self.input_index += 1
+                    if self.input_index == 10:
+                        self.running = False
+                        self.success = True
+                        self.ending_message = self.font.render(
+                            'Files succesfully backed up!', True, BLACK, GREY)
+                        self.ending_message_rect = self.ending_message.get_rect(
+                            center=self.sub_rect.center)
+                    elif self.input_index-1 == self.last_index_revealed:
+                        self.input_index = 0
+                        self.last_index_revealed += 1
+                        self.schedule_sequence(self.last_index_revealed+1)
+                else:
+                    self.running = False
+                    self.success = False
+                    self.ending_message = self.font.render(
+                        'Incorrect Sequence!', True, BLACK, GREY)
+                    self.ending_message_rect = self.ending_message.get_rect(
+                        center=self.sub_rect.center)
+
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
             click_used = False
 
-            click_used = self.check_forfeit_buttons_clicked(
-                x, y) or self.check_info_bar_clicked(x, y)
+            click_used = self.check_forfeit_buttons_clicked(x, y)
             if click_used:
                 continue
+
+    def take_event(self, event):
+        if event.type == pygame.KEYDOWN:
+            if self.current_phase == BF_COPY:
+                if event.key == pygame.K_a:
+                    self.left.pressed = True
+                    self.keys_previously_pressed.add('l')
+                    self.keys_currently_pressed.add('l')
+                elif event.key == pygame.K_d:
+                    self.right.pressed = True
+                    self.keys_previously_pressed.add('r')
+                    self.keys_currently_pressed.add('r')
+                elif event.key == pygame.K_s:
+                    self.down.pressed = True
+                    self.keys_previously_pressed.add('d')
+                    self.keys_currently_pressed.add('d')
+                elif event.key == pygame.K_w:
+                    self.up.pressed = True
+                    self.keys_previously_pressed.add('u')
+                    self.keys_currently_pressed.add('u')
+
+        if event.type == pygame.KEYUP:
+            if self.current_phase == BF_COPY:
+                if event.key == pygame.K_a:
+                    self.left.pressed = False
+                    self.keys_currently_pressed.discard('l')
+                elif event.key == pygame.K_d:
+                    self.right.pressed = False
+                    self.keys_currently_pressed.discard('r')
+                elif event.key == pygame.K_s:
+                    self.down.pressed = False
+                    self.keys_currently_pressed.discard('d')
+                elif event.key == pygame.K_w:
+                    self.up.pressed = False
+                    self.keys_currently_pressed.discard('u')
 
 
 class DataEncryption(MiniGame):

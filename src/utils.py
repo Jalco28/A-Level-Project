@@ -629,6 +629,42 @@ class UAButton(Image):
         screen.blit(self.image, self.rect)
 
 
+class BFArrow:
+    def __init__(self, pos, direction, globabl_info_bar):
+        self.global_info_bar = globabl_info_bar
+        self.image = pygame.image.load(rf'images/BF/{direction}.png')
+        self.highlighted_image = pygame.image.load(
+            rf'images/BF/highlighted/{direction}.png')
+        self.rect = self.image.get_rect(center=pos)
+        self.pressed = False
+        self.highlighted = False
+        self.scheduled_highlights = []
+
+    def update(self):
+        self.highlighted = False
+        for highlight in self.scheduled_highlights:
+            if highlight[0] <= self.global_info_bar.score <= highlight[1]:
+                self.highlighted = True
+                break
+        try:
+            if self.scheduled_highlights[-1][-1] < self.global_info_bar.score:
+                self.scheduled_highlights = []  # Clear schedule if all have been done
+        except IndexError:  # There are no scheduled highlights
+            pass
+
+    def draw(self, screen: pygame.Surface, phase):
+        if phase == BF_COPY:
+            if self.pressed:
+                screen.blit(self.highlighted_image, self.rect)
+            else:
+                screen.blit(self.image, self.rect)
+        else:
+            if self.highlighted:
+                screen.blit(self.highlighted_image, self.rect)
+            else:
+                screen.blit(self.image, self.rect)
+
+
 def tuple_addition(a, b):
     return tuple(sum(x) for x in zip(a, b))
 

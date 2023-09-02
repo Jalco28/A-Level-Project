@@ -60,4 +60,6 @@ UA_PASSWORDS = ['password',
 UA_TICK = 0
 UA_CROSS = 1
 UA_LOCK = 2
+BF_WATCH = 0
+BF_COPY = 1
 DEBUG = False
