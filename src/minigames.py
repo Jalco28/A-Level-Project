@@ -4,9 +4,10 @@ from constants import *
 from utils import *
 from copy import copy, deepcopy
 from itertools import cycle, combinations, pairwise
-from math import cos, pi, sin
+from math import cos, pi, sin, atan2
 from functools import reduce
 import operator
+from string import ascii_lowercase, ascii_uppercase
 
 
 class MiniGame:
@@ -1185,25 +1186,128 @@ class BackupFiles(MiniGame):
                     self.keys_currently_pressed.discard('u')
 
 
-class DataEncryption(MiniGame):
+class DataDecryption(MiniGame):
+    num_to_lower_alpha = {idx: letter for idx,
+                          letter in enumerate(ascii_lowercase)}
+    num_to_upper_alpha = {idx: letter for idx,
+                          letter in enumerate(ascii_uppercase)}
+
+    lower_alpha_to_num = {letter: idx for idx,
+                          letter in enumerate(ascii_lowercase)}
+    upper_alpha_to_num = {letter: idx for idx,
+                          letter in enumerate(ascii_uppercase)}
+
+    @classmethod
+    def ceaser_shift(cls, text: str, delta: int):
+        if delta == 0:
+            return text
+        shifted_text = ''
+        for char in text:
+            if not char.isalpha():
+                shifted_text += char
+                continue
+            if char.islower():
+                old_index = cls.lower_alpha_to_num[char]
+                new_index = (old_index+delta) % 26
+                new_char = cls.num_to_lower_alpha[new_index]
+                shifted_text += new_char
+                continue
+            if char.isupper():
+                old_index = cls.upper_alpha_to_num[char]
+                new_index = (old_index+delta) % 26
+                new_char = cls.num_to_upper_alpha[new_index]
+                shifted_text += new_char
+                continue
+            raise RuntimeError(f'Character {char} not handled')
+        return shifted_text
+
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
-        self.label1 = self.font.render(
-            'Data Encryption', True, BLACK, GREY)
-        self.label1_rect = self.label1.get_rect(center=self.sub_rect.center)
+        self.info_bar = STTInfoBar(10, 60, global_info_bar)
+        self.phrase_font = pygame.font.SysFont('Arial', 35)
+
+        self.ring_center = (MINIGAME_WIDTH/2, MINIGAME_HEIGHT/2+100)
+        self.outer = CSOuter(self.ring_center, r'images/cs/outer.png')
+        self.inner = Image(*self.ring_center, r'images/cs/inner.png')
+        self.outer_grabbed = False
+        self.initial_grab_angle = 0
+        self.shift_delta = 0
+        self.mouse_angle = 0
+        self.distance = 0
+        self.unused_phrases = copy(CS_PHRASES)
+        self.phrase_colour = BLACK
+        self.green_text_end = -1
+        self.new_phrase()
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
             return self.draw_ending_screen(screen)
 
-        self.sub_surface.fill(GREY)
-        self.sub_surface.blit(self.label1, self.label1_rect)
+        self.sub_surface.fill(WHITE)
+        self.inner.draw(self.sub_surface)
+        self.outer.draw(self.sub_surface)
 
+        self.sub_surface.blit(self.rendered_phrase, self.phrase_rect)
+        self.info_bar.draw(self.sub_surface)
         self.common_drawing(screen)
+
+    def new_phrase(self):
+        if len(self.unused_phrases) == 0:
+            self.unused_phrases = copy(CS_PHRASES)
+
+        self.correct_phrase = random.choice(self.unused_phrases)
+        self.unused_phrases.remove(self.correct_phrase)
+        self.encrypted_phrase = self.correct_phrase
+        while self.encrypted_phrase == self.correct_phrase:
+            self.encrypted_phrase = DataDecryption.ceaser_shift(
+                self.correct_phrase, random.randint(0, 25))
+        self.render_phrase()
+
+    def change_range(self, angle):
+        """Changes range from {-180, 180} to {0, 360}"""
+        if angle < 0:
+            angle += 2*pi
+
+        return angle
+
+    def get_angle_to_mouse(self, mouse_x, mouse_y):
+        delta = tuple_addition(self.ring_center, (-mouse_x, -mouse_y))
+        self.mouse_angle = self.change_range(atan2(delta[1], delta[0]))
+        return self.mouse_angle
+
+    def get_distance_to_mouse(self, mouse_x, mouse_y):
+        delta = tuple_addition(self.ring_center, (-mouse_x, -mouse_y))
+        self.distance = tuple_pythag(delta)
+        return self.distance
+
+    def update_shift_delta(self):
+        delta = CS_ANGLE_TO_INDEX[self.outer.find_closest_angle()]
+        if delta != self.shift_delta:
+            self.shift_delta = delta
+            self.render_phrase()
+
+    def render_phrase(self):
+        self.rendered_phrase = self.phrase_font.render(DataDecryption.ceaser_shift(
+            self.encrypted_phrase, self.shift_delta), True, self.phrase_colour, WHITE)
+        self.phrase_rect = self.rendered_phrase.get_rect(
+            center=(MINIGAME_WIDTH/2, 150))
+
+    def make_text_green(self):
+        self.green_text_end = self.global_info_bar.score + 0.5
+        self.phrase_colour = GREEN
+        self.render_phrase()
 
     def update(self):
         if not self.running:
             return self.update_ending_sequence()
+
+        if not DEBUG:
+            self.check_time_and_target()
+
+        if self.phrase_colour == GREEN and self.green_text_end < self.global_info_bar.score:
+            self.phrase_colour = BLACK
+            self.new_phrase()
+
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
             click_used = False
@@ -1212,6 +1316,27 @@ class DataEncryption(MiniGame):
                 x, y) or self.check_info_bar_clicked(x, y)
             if click_used:
                 continue
+
+            if 250 <= self.get_distance_to_mouse(x, y) <= 310:
+                self.outer_grabbed = True
+                self.initial_grab_angle = self.get_angle_to_mouse(x, y)
+                self.initial_wheel_angle = self.outer.get_angle()
+
+    def take_event(self, event):
+        if event.type == pygame.MOUSEMOTION:
+            if self.outer_grabbed and not self.phrase_colour == GREEN:
+                self.outer.rotate_image_to(self.initial_wheel_angle+(self.get_angle_to_mouse(
+                    *MiniGame.translate_coords(*event.pos))-self.initial_grab_angle))
+                self.update_shift_delta()
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                if self.outer_grabbed:
+                    self.outer_grabbed = False
+                    self.outer.snap()
+                    if DataDecryption.ceaser_shift(self.encrypted_phrase, self.shift_delta) == self.correct_phrase:
+                        self.info_bar.add_score(1)
+                        self.make_text_green()
 
 
 class DataCompression(MiniGame):

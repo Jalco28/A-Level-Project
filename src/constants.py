@@ -1,3 +1,7 @@
+from math import radians
+from datetime import datetime
+import random
+
 SCREEN_WIDTH, SCREEN_HEIGHT = 1920*0.9, 1080*0.9
 MINIGAME_WIDTH, MINIGAME_HEIGHT = SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85
 BLACK = (0, 0, 0)
@@ -62,4 +66,28 @@ UA_CROSS = 1
 UA_LOCK = 2
 BF_WATCH = 0
 BF_COPY = 1
+CS_ANGLE_DELTA = radians(360/26)
+CS_ANGLES = [i*CS_ANGLE_DELTA for i in range(27)]
+CS_ANGLE_TO_INDEX = {angle: idx for idx, angle in enumerate(CS_ANGLES)}
+CS_PHRASES = ['The mitachondria is the powerhouse of the cell',
+
+              'RAM needs power to keep its contents',
+              'RAM is volatile memory',
+              'RAM is also called primary storage',
+
+              'Secondary storage doesn\'t need power to keep its contents',
+              'Secondary storage is non-volatile memory',
+              'SSDs and hard drives are also called secondary storage',
+
+              'Drivers allow peripheral devices to talk to the computer',
+              'Data no longer needed in RAM is removed during \'garbage collection\'',
+              'Disk defragmentation reorganises data on a hard drive',
+              'Don\'t bother defragmenting an SSD!',
+              'Back in my day we didn\'t have computers',
+              'It\'s their job to play video games? Really?',
+              'What\'s a you tube?',
+              'You wouldn\'t steal a car...',
+              f'Don\'t use {random.choice(["VBA", "COBOL", "Perl", "Pascal", "Fortran", "BASIC"])} in {datetime.now().year}',
+              'You don\'t reuse passwords do you?'
+              ]
 DEBUG = False

@@ -161,7 +161,7 @@ class Task:
         'Organise Drivers': 6,
         'User Authentication': 7,
         'Backup Files': 5,
-        'Data encryption': 6,
+        'Data Decryption': 6,
         'Data compression': 4
     }
     TASK_DESCRIPTIONS = [
@@ -171,8 +171,8 @@ class Task:
         'Organise Drivers',
         'User Authentication',
         'Backup Files',
-        'Data encryption',
-        'Data compression'
+        'Data Decryption',
+        'Data Compression'
     ]
     TASK_OBJECTS = {
         'Register Mouse Inputs': minigames.RegisterMouseInputs,
@@ -181,8 +181,8 @@ class Task:
         'Organise Drivers': minigames.OrganiseDrivers,
         'User Authentication': minigames.UserAuthentication,
         'Backup Files': minigames.BackupFiles,
-        'Data encryption': minigames.DataEncryption,
-        'Data compression': minigames.DataCompression
+        'Data Decryption': minigames.DataDecryption,
+        'Data Compression': minigames.DataCompression
     }
 
     def __init__(self, index, parent, description):

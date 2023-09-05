@@ -2,7 +2,7 @@ import time
 from constants import *
 import pygame
 import random
-from math import radians, sin, sqrt
+from math import radians, sin, sqrt, degrees, pi
 
 
 class Button:
@@ -663,6 +663,43 @@ class BFArrow:
                 screen.blit(self.highlighted_image, self.rect)
             else:
                 screen.blit(self.image, self.rect)
+
+
+class CSOuter:
+    def __init__(self, center, image_name):
+        self.center = center
+        self.angle = 0
+        self.initial_image = pygame.image.load(image_name)
+        self.image = pygame.image.load(image_name)
+        self.rect = self.image.get_rect(center=self.center)
+
+    def rotate_image_to(self, angle):
+        self.angle = angle
+        self.image = pygame.transform.rotate(
+            self.initial_image, -degrees(self.get_angle()))
+        self.rect = self.image.get_rect(center=self.center)
+
+    def draw(self, screen: pygame.Surface):
+        screen.blit(self.image, self.rect)
+
+    def normalise_angle(self):
+        if self.angle < 0 or self.angle <= 360:
+            self.angle = self.angle % (2*pi)
+            if self.angle < 0:
+                self.angle += 2*pi
+
+    def get_angle(self):
+        self.normalise_angle()
+        return self.angle
+
+    def find_closest_angle(self):
+        angle = min(CS_ANGLES, key=lambda x: abs(x-self.get_angle()))
+        if angle == CS_ANGLES[-1]:
+            angle = 0
+        return angle
+
+    def snap(self):
+        self.rotate_image_to(self.find_closest_angle())
 
 
 def tuple_addition(a, b):
