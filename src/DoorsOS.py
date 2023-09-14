@@ -162,7 +162,7 @@ class Task:
         'User Authentication': 7,
         'Backup Files': 5,
         'Data Decryption': 6,
-        'Data compression': 4
+        'Data Compression': 4
     }
     TASK_DESCRIPTIONS = [
         'Register Mouse Inputs',

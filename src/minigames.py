@@ -844,14 +844,13 @@ class UserAuthentication(MiniGame):
         if registered_user and password_correct:
             correct_response = UA_TICK
             self.failed_attempts[username] = 0
-        elif failed_attempts == 2:
+        elif failed_attempts >= 2:
             correct_response = UA_LOCK
             self.failed_attempts[username] += 10
-            UA_USERNAMES.remove(username)
             try:
                 self.user_dict.pop(username)
             except KeyError:  # User was not active
-                pass
+                self.inactive_users.remove(username)
         else:
             correct_response = UA_CROSS
             self.failed_attempts[username] += 1

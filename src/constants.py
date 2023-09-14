@@ -69,7 +69,7 @@ BF_COPY = 1
 CS_ANGLE_DELTA = radians(360/26)
 CS_ANGLES = [i*CS_ANGLE_DELTA for i in range(27)]
 CS_ANGLE_TO_INDEX = {angle: idx for idx, angle in enumerate(CS_ANGLES)}
-CS_PHRASES = ['The mitachondria is the powerhouse of the cell',
+CS_PHRASES = ['The mitochondria is the powerhouse of the cell',
 
               'RAM needs power to keep its contents',
               'RAM is volatile memory',
