@@ -369,7 +369,7 @@ class DefragDisk(MiniGame):
 
         self.grid_rect = pygame.Rect(self.sub_rect.centerx-(grid_size/2),
                                      self.sub_rect.centery-(grid_size/2), grid_size, grid_size)
-        self.info_bar = TimeInfoBar(10, global_info_bar)
+        self.info_bar = TimeInfoBar(120, global_info_bar)
         self.reset_button = Button('Reset blocks', self.info_bar.rect.centerx +
                                    350, self.info_bar.rect.centery, BLACK, WHITE, 30, self.reset_blocks)
         self.setup_blocks()
@@ -551,7 +551,7 @@ class OrganiseDrivers(MiniGame):
 
     @staticmethod
     def check_line_intersection(p1: tuple[int], p2: tuple[int], p3: tuple[int], p4: tuple[int]):
-        """2D specialisation of Ronald Goldman's 3D line intersection
+        """2D specialisation of Ronald Goldman's 3D line intersection algorithm
             Returns False for no intersection or infinite intersection, tuple for unique intersection point"""
         p1 = pygame.math.Vector2(
             OrganiseDrivers.convert_top_left_to_cartesian(p1))
