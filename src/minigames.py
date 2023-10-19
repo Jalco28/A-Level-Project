@@ -1050,17 +1050,19 @@ class BackupFiles(MiniGame):
     def setup_sequence(self):
         buttons = ['u', 'd', 'l', 'r']
         self.sequence = []
-        for i in range(5):
+        for i in range(6):
             self.sequence.append(random.choice(buttons))
-        for i in range(3):
+        for i in range(4):
             new = copy(buttons)
             new.pop(random.randint(0, 3))
             new.pop(random.randint(0, 2))
+            if random.randint(1,100) <= 15: #15% chance
+                new.pop(random.randint(0, 1))
             self.sequence.append(''.join(sorted(reduce(operator.add, new))))
-        for i in range(2):
-            new = copy(buttons)
-            new.pop(random.randint(0, 3))
-            self.sequence.append(''.join(sorted(reduce(operator.add, new))))
+        # for i in range(2):
+        #     new = copy(buttons)
+        #     new.pop(random.randint(0, 3))
+        #     self.sequence.append(''.join(sorted(reduce(operator.add, new))))
 
     def set_dot_colour(self, index, colour):
         self.dots[index] = (self.dots[index][0], colour)
