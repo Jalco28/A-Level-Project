@@ -702,6 +702,134 @@ class CSOuter:
         self.rotate_image_to(self.find_closest_angle())
 
 
+class DCBlock:
+    TYPES = ['straight',
+             'square',
+             'L',
+             'reverseL',
+             'T',
+             'Z',
+             'reverseZ']
+
+    def __init__(self, image, colour, global_info_bar):
+        self.global_info_bar = global_info_bar
+        self.colour = colour
+        self.last_fall_time = global_info_bar.score
+        self.tile_size = 50
+        self.tile_image = image
+        self.type = random.choice(DCBlock.TYPES)
+        self.rotation_state = 0
+        self.grid_offset = (4, -1)
+        self.solid = False
+        self.update_rect()
+
+    def draw(self, screen: pygame.Surface):
+        self.update_rect()
+        # pygame.draw.rect(screen, BLACK, self.rect)
+        for tile in self.get_tile_coords():
+            screen.blit(self.tile_image, (self.rect.left + self.tile_size *
+                        tile[0], self.rect.top + self.tile_size*tile[1]))
+        # if DEBUG:
+        #     pygame.draw.circle(screen, BLACK, self.rect.center, 5)
+
+    def update(self, blocked_slots):
+        if self.global_info_bar.score-self.last_fall_time >= 0.8:
+            self.attempt_fall(blocked_slots)
+
+    def update_rect(self):
+        if self.type in ['straight', 'square']:
+            self.rect = pygame.Rect(0, 0, 50*4, 50*4)
+        else:
+            self.rect = pygame.Rect(0, 0, 50*3, 50*3)
+        self.rect.center = self.pixel_center_from_grid_offset()
+
+    def pixel_center_from_grid_offset(self):
+        if self.type in ['straight', 'square']:
+            return tuple_addition(DC_GRID_TOP_LEFT, (50*(2+self.grid_offset[0])+1, 50*(2+self.grid_offset[1])+1))
+        else:
+            return tuple_addition(DC_GRID_TOP_LEFT, (50*(1.5+self.grid_offset[0])+1, 50*(1.5+self.grid_offset[1])+1))
+
+    def rotate(self, direction, blocked_slots):
+        assert direction in ['clockwise', 'anticlockwise']
+        if direction == 'clockwise':
+            self.change_rotation_state(1)
+            potential_coords = self.get_grid_coords()
+            self.change_rotation_state(-1)
+        if direction == 'anticlockwise':
+            self.change_rotation_state(-1)
+            potential_coords = self.get_grid_coords()
+            self.change_rotation_state(1)
+
+        for coord in potential_coords:
+            if coord in blocked_slots:
+                return
+            if coord[0] < 0 or coord[0] > 10:
+                return
+            if coord[1] < 0 or coord[1] > 12:
+                return
+
+        if direction == 'clockwise':
+            self.change_rotation_state(1)
+        elif direction == 'anticlockwise':
+            self.change_rotation_state(-1)
+
+    def change_rotation_state(self, delta):
+        self.rotation_state += delta
+        self.rotation_state %= 4
+
+    def move(self, direction, blocked_slots):
+        # self.grid_offset = tuple_addition(self.grid_offset, (-1, 0))
+        if direction == 'left':
+            potential_coords = [tuple_addition(
+                (-1, 0), coord) for coord in self.get_grid_coords()]
+        elif direction == 'right':
+            potential_coords = [tuple_addition(
+                (1, 0), coord) for coord in self.get_grid_coords()]
+        success = True
+        for coord in potential_coords:
+            if coord in blocked_slots:
+                success = False
+                break
+            if coord[0] < 0 or coord[0] > 10:
+                success = False
+                break
+        if success:
+            if direction == 'left':
+                self.grid_offset = tuple_addition(self.grid_offset, (-1, 0))
+            if direction == 'right':
+                self.grid_offset = tuple_addition(self.grid_offset, (1, 0))
+
+    def attempt_fall(self, blocked_slots, forced=False):
+        if not forced:
+            self.last_fall_time = self.global_info_bar.score
+        potential_coords = [tuple_addition(
+            (0, 1), coord) for coord in self.get_grid_coords()]
+        success = True
+        for coord in potential_coords:
+            if coord in blocked_slots:
+                success = False
+                break
+        if success:
+            self.grid_offset = tuple_addition(self.grid_offset, (0, 1))
+        else:
+            self.solid = True
+
+    def get_grid_coords(self):
+        return [tuple_addition(self.grid_offset, coord) for coord in self.get_tile_coords()]
+
+    def get_colour(self):
+        return self.colour
+
+    def get_tile_coords(self):
+        return DC_TILES[self.type][self.rotation_state]
+
+    def get_spawn_success(self, blocked_slots):
+        for coord in self.get_grid_coords():
+            if coord in blocked_slots:
+                return False
+        return True
+
+
 def tuple_addition(a, b):
     return tuple(sum(x) for x in zip(a, b))
 

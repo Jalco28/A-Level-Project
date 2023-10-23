@@ -1341,24 +1341,51 @@ class DataDecryption(MiniGame):
 
 
 class DataCompression(MiniGame):
+    @staticmethod
+    def grid_coords_to_pixel_top_left(coords):
+        return tuple_addition(DC_GRID_TOP_LEFT, (50*coords[0]+1, 50*coords[1]+1))
+
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
-        self.label1 = self.font.render(
-            'Data Compression', True, BLACK, GREY)
-        self.label1_rect = self.label1.get_rect(center=self.sub_rect.center)
+        self.blocks_remaining = random.randint(20, 25)
+        self.info_bar = TimeInfoBar(500, global_info_bar)
+        self.info_bar.add_custom_field(
+            'Blocks Remaining', self.blocks_remaining)
+        self.setup_images()
+        # Grid Coord -> colour
+        self.blocked_slots = {(i, 13): None for i in range(11)}
+        self.new_block()
+
+    def setup_images(self):
+        self.colours = ['blue', 'green', 'pink', 'purple', 'red', 'yellow']
+        self.surfaces = {colour: pygame.image.load(
+            f'images/DC/{colour}.png') for colour in self.colours}
+        self.colours = cycle(self.colours)
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
             return self.draw_ending_screen(screen)
+        self.sub_surface.fill(WHITE)
+        self.block.draw(self.sub_surface)
+        self.draw_blocked_slots()
+        self.draw_grid()
 
-        self.sub_surface.fill(GREY)
-        self.sub_surface.blit(self.label1, self.label1_rect)
-
+        self.info_bar.draw(self.sub_surface)
         self.common_drawing(screen)
 
     def update(self):
         if not self.running:
             return self.update_ending_sequence()
+        if not DEBUG:
+            self.check_time()
+
+        if self.block.solid:
+            colour = self.block.get_colour()
+            for coord in self.block.get_grid_coords():
+                self.blocked_slots[coord] = colour
+            self.new_block()
+        self.block.update(self.blocked_slots)
+
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
             click_used = False
@@ -1367,3 +1394,73 @@ class DataCompression(MiniGame):
                 x, y) or self.check_info_bar_clicked(x, y)
             if click_used:
                 continue
+
+    def draw_grid(self):
+        # Vertical
+        for i in range(12):
+            pygame.draw.line(self.sub_surface, GREY, tuple_addition(DC_GRID_TOP_LEFT, (
+                i*50, 0)), tuple_addition(DC_GRID_TOP_LEFT, (i*50, MINIGAME_HEIGHT)), 2)
+        # Horizontal
+        for i in range(14):
+            pygame.draw.line(self.sub_surface, GREY, tuple_addition(DC_GRID_TOP_LEFT, (
+                0, i*50)), tuple_addition(DC_GRID_TOP_LEFT, (50*11, i*50)), 2)
+
+    def draw_blocked_slots(self):
+        for coord, colour in self.blocked_slots.items():
+            if colour is None:
+                continue
+            pixel_coords = DataCompression.grid_coords_to_pixel_top_left(coord)
+            self.sub_surface.blit(self.surfaces[colour], pixel_coords)
+
+    def new_block(self):
+        self.check_completed_rows()
+        if self.blocks_remaining == 0:
+            self.running = False
+            self.success = True
+            self.ending_message = self.font.render('Data Successfully Compressed!', True, BLACK, GREY)
+            self.ending_message_rect = self.ending_message.get_rect(center=self.sub_rect.center)
+        self.blocks_remaining -= 1
+        self.info_bar.set_custom_field_value('Blocks Remaining', self.blocks_remaining)
+        new_colour = next(self.colours)
+        self.block = DCBlock(
+            self.surfaces[new_colour], new_colour, self.global_info_bar)
+        successful_spawn = self.block.get_spawn_success(self.blocked_slots)
+        if not successful_spawn:
+            self.running = False
+            self.success = False
+            self.ending_message = self.font.render(
+                'Overflow: Data Corrupted!', True, BLACK, GREY)
+            self.ending_message_rect = self.ending_message.get_rect(
+                center=self.sub_rect.center)
+
+    def check_completed_rows(self):
+        cleared_rows = []
+        for row_number in range(13):
+            taken_slots_in_row = [
+                coord for coord in self.blocked_slots if coord[1] == row_number]
+            if len(taken_slots_in_row) == 11:
+                cleared_rows.append(row_number)
+
+        for row_number in cleared_rows:
+            for item in sorted(self.blocked_slots.items(), key=lambda x: x[0][1], reverse=True):
+                coord, colour = item
+                if coord[1] == row_number:
+                    self.blocked_slots.pop(coord)
+                if coord[1] < row_number:
+                    self.blocked_slots.pop(coord)
+                    new_coord = tuple_addition(coord, (0, 1))
+                    assert new_coord not in self.blocked_slots
+                    self.blocked_slots[new_coord] = colour
+
+    def take_event(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_e:
+                self.block.rotate('clockwise', self.blocked_slots)
+            elif event.key == pygame.K_q:
+                self.block.rotate('anticlockwise', self.blocked_slots)
+            elif event.key == pygame.K_a:
+                self.block.move('left', self.blocked_slots)
+            elif event.key == pygame.K_d:
+                self.block.move('right', self.blocked_slots)
+            elif event.key == pygame.K_s:
+                self.block.attempt_fall(self.blocked_slots, True)
