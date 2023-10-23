@@ -179,7 +179,7 @@ class TimeInfoBar:
         for field in self.custom_fields.items():
             screen.blit(field[1][2], field[1][1])
 
-    def change_custom_field_value(self, name, value):
+    def set_custom_field_value(self, name, value):
         old_tuple = self.custom_fields[name]
         self.custom_fields[name] = (value, old_tuple[1], old_tuple[2])
 

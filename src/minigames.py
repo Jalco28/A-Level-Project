@@ -642,7 +642,7 @@ class OrganiseDrivers(MiniGame):
             if intersect:
                 self.intersections.append(intersect)
 
-        self.info_bar.change_custom_field_value(
+        self.info_bar.set_custom_field_value(
             'Line Crossings', len(self.intersections))
 
         while self.clicks_to_handle:
@@ -1056,7 +1056,7 @@ class BackupFiles(MiniGame):
             new = copy(buttons)
             new.pop(random.randint(0, 3))
             new.pop(random.randint(0, 2))
-            if random.randint(1,100) <= 15: #15% chance
+            if random.randint(1, 100) <= 15:  # 15% chance
                 new.pop(random.randint(0, 1))
             self.sequence.append(''.join(sorted(reduce(operator.add, new))))
         # for i in range(2):
