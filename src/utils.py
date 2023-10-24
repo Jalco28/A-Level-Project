@@ -58,7 +58,7 @@ class ToggleButton(Button):
 
 class Image:
     def __init__(self, center_x, center_y, image_name, scale=1):
-        self.image = pygame.image.load(image_name)
+        self.image = pygame.image.load(image_name).convert_alpha()
         if scale != 1:
             self.image = pygame.transform.smoothscale(
                 self.image, (scale*self.image.get_width(), scale*self.image.get_height()))
@@ -68,6 +68,9 @@ class Image:
         screen.blit(self.image, self.rect)
 
     def update(self):
+        pass
+
+    def click(self, *args, **kwargs):
         pass
 
 
