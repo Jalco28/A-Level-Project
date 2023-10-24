@@ -262,9 +262,11 @@ class MainMenu:
         self.clock = pygame.time.Clock()
 
         self.play_button = Button(
-            'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.3, BLACK, GREY, 50, self.choose_difficulty)
+            'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.choose_difficulty)
         self.score_board_button = Button(
             'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, None)
+        self.learning_button = Button(
+            'Learning Mode', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.6, BLACK, GREY, 50, self.learning_mode)
         self.exit_button = Button(
             'Exit to desktop', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.7, BLACK, GREY, 50, self.menu_running_false)
 
@@ -288,7 +290,7 @@ class MainMenu:
             'Play', SCREEN_WIDTH*0.57, SCREEN_HEIGHT*0.65, BLACK, GREY, 50, self.play_game)
 
         self.panels = [self.play_button,
-                       self.score_board_button, self.exit_button]
+                       self.score_board_button, self.learning_button, self.exit_button]
 
     def choose_difficulty(self):
         self.panels = [self.gcse_button, self.alevel_button, self.regular_button,
@@ -305,17 +307,23 @@ class MainMenu:
         else:
             mode = ZEN_MODE
 
-        self.panels = [self.play_button,
-                       self.score_board_button, self.exit_button]
+        self.reset_panels()
         self.game = DoorsOS(self.clock, self.screen, difficulty, mode)
         self.game.play_game()
         exit_code = self.game.get_exit_code()
         if exit_code == pygame.QUIT:
             self.running = False
 
+    def learning_mode(self):
+        self.learning = LearningMode(self.clock, self.screen)
+        self.learning.run()
+        exit_code = self.learning.get_exit_code()
+        if exit_code == pygame.QUIT:
+            self.running = False
+
     def reset_panels(self):
         self.panels = [self.play_button,
-                       self.score_board_button, self.exit_button]
+                       self.score_board_button, self.learning_button, self.exit_button]
 
     def menu_running_false(self):
         self.running = False
@@ -483,6 +491,141 @@ class DoorsOS:
 
     def unpause_game(self):
         self.paused = False
+
+
+class LearningMode:
+    def __init__(self, clock, screen):
+        font_size = 50
+        self.RMI_button = Button('Register Mouse Inputs', SCREEN_WIDTH *
+                                 0.25, SCREEN_HEIGHT*(1/6), BLACK, GREY, font_size, self.enter_RMI)
+        self.MM_button = Button('Memory Management', SCREEN_WIDTH *
+                                0.25, SCREEN_HEIGHT*(2/6), BLACK, GREY, font_size, self.enter_MM)
+        self.DD_button = Button('Defrag Disk', SCREEN_WIDTH*0.25,
+                                SCREEN_HEIGHT*(3/6), BLACK, GREY, font_size, self.enter_DD)
+        self.OD_button = Button('Organise Drivers', SCREEN_WIDTH *
+                                0.25, SCREEN_HEIGHT*(4/6), BLACK, GREY, font_size, self.enter_OD)
+        self.UA_button = Button('User Authentication', SCREEN_WIDTH *
+                                0.25, SCREEN_HEIGHT*(5/6), BLACK, GREY, font_size, self.enter_UA)
+
+        self.BF_button = Button('Backup Files', SCREEN_WIDTH*0.75,
+                                SCREEN_HEIGHT*(1/6), BLACK, GREY, font_size, self.enter_BF)
+        self.CS_button = Button('Data Decryption', SCREEN_WIDTH *
+                                0.75, SCREEN_HEIGHT*(2/6), BLACK, GREY, font_size, self.enter_CS)
+        self.DC_button = Button('Data Compression', SCREEN_WIDTH *
+                                0.75, SCREEN_HEIGHT*(3/6), BLACK, GREY, font_size, self.enter_DC)
+        self.MT_button = Button('Malware Threat', SCREEN_WIDTH*0.75,
+                                SCREEN_HEIGHT*(4/6), BLACK, GREY, font_size, self.enter_MT)
+        self.TS_button = Button('Task Scheduling', SCREEN_WIDTH *
+                                0.75, SCREEN_HEIGHT*(5/6), BLACK, GREY, font_size, self.enter_TS)
+
+        self.exit_button = Button(
+            'Back', SCREEN_WIDTH*0.95, SCREEN_HEIGHT*0.05, BLACK, GREY, font_size, self.exit)
+        self.back_button = Button('Back', SCREEN_WIDTH*0.95, SCREEN_HEIGHT *
+                                  0.05, BLACK, GREY, font_size, self.buttons_to_panels)
+
+        self.RMI_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/RMI.png')
+        self.MM_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/MM.png')
+        self.DD_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/DD.png')
+        self.OD_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/OD.png')
+        self.UA_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/UA.png')
+        self.BF_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/BF.png')
+        self.CS_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/CS.png')
+        self.DC_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/DC.png')
+        self.MT_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/MT.png')
+        self.TS_image = Image(
+            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/TS.png')
+
+        self.buttons_to_panels()
+        self.exit_code = 0
+        self.clock = clock
+        self.screen = screen
+
+    def buttons_to_panels(self):
+        self.panels = [self.RMI_button,
+                       self.MM_button,
+                       self.DD_button,
+                       self.OD_button,
+                       self.UA_button,
+                       self.BF_button,
+                       self.CS_button,
+                       self.DC_button,
+                       self.MT_button,
+                       self.TS_button,
+                       self.exit_button]
+
+    def get_exit_code(self):
+        return self.exit_code
+
+    def exit(self):
+        self.running = False
+
+    def run(self):
+        self.running = True
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    self.exit_code = pygame.QUIT
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.send_click_to_panel(event)
+            if not self.running:
+                break
+            pygame.display.set_caption(
+                f'DoorsOS {round(self.clock.get_fps())}fps')
+            self.update_screen()
+            self.clock.tick(FPS)
+
+    def update_screen(self):
+        self.screen.fill(WHITE)
+        for panel in self.panels:
+            panel.draw(self.screen)
+        pygame.display.update()
+
+    def send_click_to_panel(self, event: pygame.event.Event):
+        x, y = event.pos
+        for panel in self.panels:
+            if panel.rect.collidepoint(x, y):
+                panel.click(x, y)
+
+    def enter_RMI(self):
+        self.panels = [self.RMI_image, self.back_button]
+
+    def enter_MM(self):
+        self.panels = [self.MM_image, self.back_button]
+
+    def enter_DD(self):
+        self.panels = [self.DD_image, self.back_button]
+
+    def enter_OD(self):
+        self.panels = [self.OD_image, self.back_button]
+
+    def enter_UA(self):
+        self.panels = [self.UA_image, self.back_button]
+
+    def enter_BF(self):
+        self.panels = [self.BF_image, self.back_button]
+
+    def enter_CS(self):
+        self.panels = [self.CS_image, self.back_button]
+
+    def enter_DC(self):
+        self.panels = [self.DC_image, self.back_button]
+
+    def enter_MT(self):
+        self.panels = [self.MT_image, self.back_button]
+
+    def enter_TS(self):
+        self.panels = [self.TS_image, self.back_button]
 
 
 if __name__ == '__main__':
