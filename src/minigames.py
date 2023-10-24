@@ -1417,10 +1417,13 @@ class DataCompression(MiniGame):
         if self.blocks_remaining == 0:
             self.running = False
             self.success = True
-            self.ending_message = self.font.render('Data Successfully Compressed!', True, BLACK, GREY)
-            self.ending_message_rect = self.ending_message.get_rect(center=self.sub_rect.center)
+            self.ending_message = self.font.render(
+                'Data Successfully Compressed!', True, BLACK, GREY)
+            self.ending_message_rect = self.ending_message.get_rect(
+                center=self.sub_rect.center)
         self.blocks_remaining -= 1
-        self.info_bar.set_custom_field_value('Blocks Remaining', self.blocks_remaining)
+        self.info_bar.set_custom_field_value(
+            'Blocks Remaining', self.blocks_remaining)
         new_colour = next(self.colours)
         self.block = DCBlock(
             self.surfaces[new_colour], new_colour, self.global_info_bar)
