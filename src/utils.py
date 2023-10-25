@@ -34,8 +34,8 @@ class Button:
 
 
 class ToggleButton(Button):
-    def __init__(self, text, left, top, border_colour, background_colour, active_background_colour, font_size, active):
-        super().__init__(text, left, top, border_colour, background_colour, font_size, None)
+    def __init__(self, text, center_x, center_y, border_colour, background_colour, active_background_colour, font_size, active):
+        super().__init__(text, center_x, center_y, border_colour, background_colour, font_size, None)
         self.active = active
         self.active_background_colour = active_background_colour
 
