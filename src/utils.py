@@ -3,6 +3,9 @@ from constants import *
 import pygame
 import random
 from math import radians, sin, sqrt, degrees, pi
+import requests
+import json
+from datetime import date, timedelta
 
 
 class Button:
@@ -837,6 +840,123 @@ class DCBlock:
             if coord in blocked_slots:
                 return False
         return True
+
+
+class LeaderBoard:
+    VERTICAL_LINES = [SCREEN_WIDTH *
+                      (1/4), SCREEN_WIDTH*(1/2), SCREEN_WIDTH*(3/4)]
+
+    def __init__(self):
+        self.difficulty = 'All'
+        self.time_period = 'All time'
+        self.rect = pygame.Rect(14, 160, 1700, 800)
+        self.font = pygame.font.SysFont('Arial', 30)
+
+        self.position_text = self.font.render('Position', True, BLACK, GREY)
+        self.position_text_rect = self.position_text.get_rect(
+            centery=179, right=LeaderBoard.VERTICAL_LINES[0]-10)
+
+        self.username_text = self.font.render('Username', True, BLACK, GREY)
+        self.username_text_rect = self.username_text.get_rect(
+            centery=179, right=LeaderBoard.VERTICAL_LINES[1]-10)
+
+        self.score_text = self.font.render('Score', True, BLACK, GREY)
+        self.score_text_rect = self.score_text.get_rect(
+            centery=179, right=LeaderBoard.VERTICAL_LINES[2]-10)
+
+        self.difficulty_text = self.font.render('Difficulty', True, BLACK, GREY)
+        self.difficulty_text_rect = self.difficulty_text.get_rect(
+            centery=179, right=self.rect.right-10)
+
+        self.download_data()
+        self.update_rows()
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, GREY, self.rect)
+        for line in LeaderBoard.VERTICAL_LINES:
+            pygame.draw.line(screen, BLACK, (line, self.rect.top),
+                             (line, self.rect.bottom))
+
+        screen.blit(self.position_text, self.position_text_rect)
+        screen.blit(self.username_text, self.username_text_rect)
+        screen.blit(self.score_text, self.score_text_rect)
+        screen.blit(self.difficulty_text, self.difficulty_text_rect)
+
+        for row in self.rows:
+            row.draw(screen)
+
+    def set_time_period(self, time_period):
+        self.time_period = time_period
+        self.update_rows()
+
+    def set_difficulty(self, difficulty):
+        self.difficulty = difficulty
+        self.update_rows()
+
+    def download_data(self):
+        r = requests.get('http://140.238.101.107/doorsos/read.php')
+        self.all_data = json.loads(r.text)
+
+    def matches_filters(self, data):
+        if data['difficulty'] != self.difficulty and self.difficulty != 'All':
+            return False
+        date_achieved = data['date'].split('-')
+        date_achieved = date(int(date_achieved[2]), int(date_achieved[1]), int(date_achieved[0]))
+
+        if self.time_period == 'Past day':
+            delta = timedelta(days=1)
+        elif self.time_period == 'Past week':
+            delta = timedelta(days=7)
+        elif self.time_period == 'Past month':
+            delta = timedelta(days=30)
+        elif self.time_period == 'Past year':
+            delta = timedelta(days=365)
+        elif self.time_period == 'All time':
+            delta = 'ALL'
+        else:
+            raise ValueError('Unknown date filter')
+
+        if delta != 'ALL':
+            target_date = date.today()-delta
+            if date_achieved < target_date:
+                return False
+
+        return True
+
+    def update_rows(self):
+        filtered_data = [data for data in self.all_data if self.matches_filters(data)]
+        filtered_data.sort(key=lambda x: x['score'], reverse=True)
+        self.rows = [LeaderBoardRow((self.rect.left, self.rect.top+((i+1)*38)), data, i+1) for i, data in enumerate(filtered_data[:20])]
+
+
+class LeaderBoardRow:
+    def __init__(self, topleft, data, position):
+        self.rect = pygame.Rect(0, 0, 1700, 38)
+        self.rect.topleft = topleft
+        self.font = pygame.font.SysFont('Arial', 30)
+
+        self.position_text = self.font.render(str(position), True, BLACK, GREY)
+        self.position_text_rect = self.position_text.get_rect(
+            centery=self.rect.centery, right=LeaderBoard.VERTICAL_LINES[0]-10)
+
+        self.username_text = self.font.render(data['username'], True, BLACK, GREY)
+        self.username_text_rect = self.username_text.get_rect(
+            centery=self.rect.centery, right=LeaderBoard.VERTICAL_LINES[1]-10)
+
+        self.score_text = self.font.render(str(data['score']), True, BLACK, GREY)
+        self.score_text_rect = self.score_text.get_rect(
+            centery=self.rect.centery, right=LeaderBoard.VERTICAL_LINES[2]-10)
+
+        self.difficulty_text = self.font.render(data['difficulty'], True, BLACK, GREY)
+        self.difficulty_text_rect = self.difficulty_text.get_rect(
+            centery=self.rect.centery, right=self.rect.right-10)
+
+    def draw(self, screen: pygame.Surface):
+        screen.blit(self.position_text, self.position_text_rect)
+        screen.blit(self.username_text, self.username_text_rect)
+        screen.blit(self.score_text, self.score_text_rect)
+        screen.blit(self.difficulty_text, self.difficulty_text_rect)
+        pygame.draw.rect(screen, BLACK, self.rect, 1)
 
 
 def tuple_addition(a, b):

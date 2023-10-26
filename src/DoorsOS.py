@@ -5,6 +5,7 @@ import time
 import minigames
 from constants import *
 from utils import *
+import requests
 
 
 class InfoBar:
@@ -263,8 +264,8 @@ class MainMenu:
 
         self.play_button = Button(
             'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.choose_difficulty)
-        self.score_board_button = Button(
-            'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, None)
+        self.leaderboard_button = Button(
+            'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, self.leaderboard)
         self.learning_button = Button(
             'Learning Mode', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.6, BLACK, GREY, 50, self.learning_mode)
         self.exit_button = Button(
@@ -290,7 +291,17 @@ class MainMenu:
             'Play', SCREEN_WIDTH*0.57, SCREEN_HEIGHT*0.65, BLACK, GREY, 50, self.play_game)
 
         self.panels = [self.play_button,
-                       self.score_board_button, self.learning_button, self.exit_button]
+                       self.leaderboard_button, self.learning_button, self.exit_button]
+        if SCHOOL_MODE:
+            self.bypass_school_webwarning()
+
+    def bypass_school_webwarning(self):
+        url = "http://10.50.10.254:4100/wbo"
+        payload = {"redirect": "http://140.238.101.107/",
+                    "helper": "Default-WebBlocker",
+                    "action": "warn",
+                    "url": "140.238.101.107"}
+        requests.post(url, data=payload, verify=False)
 
     def choose_difficulty(self):
         self.panels = [self.gcse_button, self.alevel_button, self.regular_button,
@@ -321,9 +332,16 @@ class MainMenu:
         if exit_code == pygame.QUIT:
             self.running = False
 
+    def leaderboard(self):
+        self.leaderboard = LeaderBoardScreen(self.clock, self.screen)
+        self.leaderboard.run()
+        exit_code = self.leaderboard.get_exit_code()
+        if exit_code == pygame.QUIT:
+            self.running = False
+
     def reset_panels(self):
         self.panels = [self.play_button,
-                       self.score_board_button, self.learning_button, self.exit_button]
+                       self.leaderboard_button, self.learning_button, self.exit_button]
 
     def menu_running_false(self):
         self.running = False
@@ -626,6 +644,118 @@ class LearningMode:
 
     def enter_TS(self):
         self.panels = [self.TS_image, self.back_button]
+
+
+class LeaderBoardScreen:
+    def __init__(self, clock, screen):
+        self.clock = clock
+        self.screen = screen
+        self.exit_code = 0
+
+        font_size = 30
+        self.font = pygame.font.SysFont('Arial', font_size, False, False)
+
+        self.time_period_text = self.font.render(
+            'Time period:', True, BLACK, WHITE)
+        self.time_period_text_rect = self.time_period_text.get_rect(
+            center=(220, 80))
+        self.day_button = ToggleButton(
+            'Past day', 400, 30, BLACK, GREY, GREEN, font_size, False, self.update_time_period)
+        self.week_button = ToggleButton(
+            'Past week', 400, 80, BLACK, GREY, GREEN, font_size, False, self.update_time_period)
+        self.month_button = ToggleButton(
+            'Past month', 400, 130, BLACK, GREY, GREEN, font_size, False, self.update_time_period)
+        self.year_button = ToggleButton(
+            'Past year', 550, 30, BLACK, GREY, GREEN, font_size, False, self.update_time_period)
+        self.all_time_button = ToggleButton(
+            'All time', 550, 80, BLACK, GREY, GREEN, font_size, True, self.update_time_period)
+        self.time_buttons = [self.day_button,
+                             self.week_button,
+                             self.month_button,
+                             self.year_button,
+                             self.all_time_button]
+        for button in self.time_buttons:
+            temp_list = self.time_buttons.copy()
+            temp_list.remove(button)
+            button.set_partners(temp_list)
+
+        self.difficulty_text = self.font.render(
+            'Difficulty:', True, BLACK, WHITE)
+        self.difficulty_text_rect = self.difficulty_text.get_rect(
+            center=(1020, 80))
+        self.all_difficulty_button = ToggleButton(
+            'All', 1100, 80, BLACK, GREY, GREEN, font_size, True, self.update_difficulty)
+        self.gcse_button = ToggleButton(
+            'GCSE', 1180, 80, BLACK, GREY, GREEN, font_size, False, self.update_difficulty)
+        self.a_level_button = ToggleButton(
+            'A-Level', 1300, 80, BLACK, GREY, GREEN, font_size, False, self.update_difficulty)
+        self.difficulty_buttons = [self.all_difficulty_button,
+                                   self.gcse_button,
+                                   self.a_level_button]
+        for button in self.difficulty_buttons:
+            temp_list = self.difficulty_buttons.copy()
+            temp_list.remove(button)
+            button.set_partners(temp_list)
+
+        self.filter_buttons = self.time_buttons + self.difficulty_buttons
+
+        self.back_button = Button(
+            'Back', 50, 30, BLACK, GREY, font_size, self.exit)
+
+        self.leaderboard = LeaderBoard()
+
+        self.panels = [self.back_button, self.leaderboard]
+        self.panels.extend(self.filter_buttons)
+
+    def update_time_period(self):
+        for button in self.time_buttons:
+            if button.active:
+                self.leaderboard.set_time_period(button.text)
+                break
+
+    def update_difficulty(self):
+        for button in self.difficulty_buttons:
+            if button.active:
+                self.leaderboard.set_difficulty(button.text)
+                break
+
+    def get_exit_code(self):
+        return self.exit_code
+
+    def exit(self):
+        self.running = False
+
+    def run(self):
+        self.running = True
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    self.exit_code = pygame.QUIT
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.send_click_to_panel(event)
+            if not self.running:
+                break
+            pygame.display.set_caption(
+                f'DoorsOS {round(self.clock.get_fps())}fps')
+            self.update_screen()
+            self.clock.tick(FPS)
+
+    def update_screen(self):
+        self.screen.fill(WHITE)
+        for panel in self.panels:
+            panel.draw(self.screen)
+
+        self.screen.blit(self.time_period_text, self.time_period_text_rect)
+        self.screen.blit(self.difficulty_text, self.difficulty_text_rect)
+        pygame.display.update()
+
+    def send_click_to_panel(self, event: pygame.event.Event):
+        x, y = event.pos
+        for panel in self.panels:
+            if panel.rect.collidepoint(x, y):
+                panel.click(x, y)
 
 
 if __name__ == '__main__':
