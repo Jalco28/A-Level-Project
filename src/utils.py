@@ -10,16 +10,19 @@ class Button:
         self.font = pygame.font.SysFont('Arial', font_size)
         self.text = text
         self.rendered_text = self.font.render(self.text, True, BLACK)
-        self.rect = pygame.Rect(
-            0, 0, self.rendered_text.get_width()*1.1, self.rendered_text.get_height()*1.2)
+        if self.text == 'All':
+            self.rect = pygame.Rect(
+                0, 0, self.rendered_text.get_width()*1.3, self.rendered_text.get_height()*1.2)
+        else:
+            self.rect = pygame.Rect(
+                0, 0, self.rendered_text.get_width()*1.1, self.rendered_text.get_height()*1.2)
         self.rect.center = (center_x, center_y)
         self.text_rect = pygame.Rect(
             0, 0, self.rendered_text.get_width(), self.rendered_text.get_height())
         self.text_rect.center = self.rect.center
         self.border_colour = border_colour
         self.background_colour = background_colour
-        if not isinstance(self, ToggleButton):
-            self.action = action
+        self.action = action
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, self.background_colour, self.rect)
@@ -34,8 +37,9 @@ class Button:
 
 
 class ToggleButton(Button):
-    def __init__(self, text, center_x, center_y, border_colour, background_colour, active_background_colour, font_size, active):
-        super().__init__(text, center_x, center_y, border_colour, background_colour, font_size, None)
+    def __init__(self, text, center_x, center_y, border_colour, background_colour, active_background_colour, font_size, active, action=None):
+        super().__init__(text, center_x, center_y,
+                         border_colour, background_colour, font_size, action)
         self.active = active
         self.active_background_colour = active_background_colour
 
@@ -46,6 +50,8 @@ class ToggleButton(Button):
         self.active = True
         for partner in self.partners:
             partner.active = False
+        if self.action is not None:
+            self.action()
 
     def draw(self, screen: pygame.Surface):
         if self.active:
