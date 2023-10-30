@@ -333,9 +333,9 @@ class MainMenu:
             self.running = False
 
     def leaderboard(self):
-        self.leaderboard = LeaderBoardScreen(self.clock, self.screen)
-        self.leaderboard.run()
-        exit_code = self.leaderboard.get_exit_code()
+        self.leaderboard_screen = LeaderBoardScreen(self.clock, self.screen)
+        self.leaderboard_screen.run()
+        exit_code = self.leaderboard_screen.get_exit_code()
         if exit_code == pygame.QUIT:
             self.running = False
 
