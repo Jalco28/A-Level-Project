@@ -89,7 +89,7 @@ class STTInfoBar:  # Score, target, time, info bar
         self.global_info_bar = global_info_bar
         self.target = target
         self.time_allowed = time_allowed
-        self.start_timestamp = self.global_info_bar.score
+        self.start_timestamp = self.global_info_bar.get_time_elapsed()
         self.rect = pygame.Rect(
             10, 10, MINIGAME_WIDTH*0.8, MINIGAME_HEIGHT*0.08)
         self.font = pygame.font.SysFont("Arial", 30)
@@ -112,7 +112,7 @@ class STTInfoBar:  # Score, target, time, info bar
 
     @property
     def time_left(self):
-        return max(int(self.time_allowed-(self.global_info_bar.score-self.start_timestamp)), 0)
+        return max(int(self.time_allowed-(self.global_info_bar.get_time_elapsed()-self.start_timestamp)), 0)
 
     def add_score(self, delta):
         self.score += delta
@@ -140,7 +140,7 @@ class TimeInfoBar:
     def __init__(self, time_allowed, global_info_bar):
         self.global_info_bar = global_info_bar
         self.time_allowed = time_allowed
-        self.start_timestamp = self.global_info_bar.score
+        self.start_timestamp = self.global_info_bar.get_time_elapsed()
         self.rect = pygame.Rect(
             10, 10, MINIGAME_WIDTH*0.8, MINIGAME_HEIGHT*0.08)
         self.font = pygame.font.SysFont("Arial", 30)
@@ -155,7 +155,7 @@ class TimeInfoBar:
 
     @property
     def time_left(self):
-        return max(int(self.time_allowed-(self.global_info_bar.score-self.start_timestamp)), 0)
+        return max(int(self.time_allowed-(self.global_info_bar.get_time_elapsed()-self.start_timestamp)), 0)
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
@@ -655,11 +655,11 @@ class BFArrow:
     def update(self):
         self.highlighted = False
         for highlight in self.scheduled_highlights:
-            if highlight[0] <= self.global_info_bar.score <= highlight[1]:
+            if highlight[0] <= self.global_info_bar.get_time_elapsed() <= highlight[1]:
                 self.highlighted = True
                 break
         try:
-            if self.scheduled_highlights[-1][-1] < self.global_info_bar.score:
+            if self.scheduled_highlights[-1][-1] < self.global_info_bar.get_time_elapsed():
                 self.scheduled_highlights = []  # Clear schedule if all have been done
         except IndexError:  # There are no scheduled highlights
             pass
@@ -726,7 +726,7 @@ class DCBlock:
     def __init__(self, image, colour, global_info_bar):
         self.global_info_bar = global_info_bar
         self.colour = colour
-        self.last_fall_time = global_info_bar.score
+        self.last_fall_time = self.global_info_bar.get_time_elapsed()
         self.tile_size = 50
         self.tile_image = image
         self.type = random.choice(DCBlock.TYPES)
@@ -745,7 +745,7 @@ class DCBlock:
         #     pygame.draw.circle(screen, BLACK, self.rect.center, 5)
 
     def update(self, blocked_slots):
-        if self.global_info_bar.score-self.last_fall_time >= 0.8:
+        if self.global_info_bar.get_time_elapsed()-self.last_fall_time >= 0.8:
             self.attempt_fall(blocked_slots)
 
     def update_rect(self):
@@ -813,7 +813,7 @@ class DCBlock:
 
     def attempt_fall(self, blocked_slots, forced=False):
         if not forced:
-            self.last_fall_time = self.global_info_bar.score
+            self.last_fall_time = self.global_info_bar.get_time_elapsed()
         potential_coords = [tuple_addition(
             (0, 1), coord) for coord in self.get_grid_coords()]
         success = True

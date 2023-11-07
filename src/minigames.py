@@ -96,8 +96,8 @@ class MiniGame:
     def update_ending_sequence(self):
         self.clicks_to_handle = []
         if self.countdown_start_time is None:
-            self.countdown_start_time = self.global_info_bar.score
-        if (self.global_info_bar.score - self.countdown_start_time >= 2) or DEBUG:
+            self.countdown_start_time = self.global_info_bar.get_time_elapsed()
+        if (self.global_info_bar.get_time_elapsed() - self.countdown_start_time >= 2) or DEBUG:
             self.ready_to_exit = True
 
     def draw_ending_screen(self, screen: pygame.Surface):
@@ -1110,7 +1110,7 @@ class BackupFiles(MiniGame):
         for arrow in self.arrows.values():
             arrow.update()
 
-        if self.current_phase == BF_WATCH and self.watch_phase_end < self.global_info_bar.score:
+        if self.current_phase == BF_WATCH and self.watch_phase_end < self.global_info_bar.get_time_elapsed():
             self.current_phase = BF_COPY
             self.input_index = 0
 
@@ -1292,7 +1292,7 @@ class DataDecryption(MiniGame):
             center=(MINIGAME_WIDTH/2, 150))
 
     def make_text_green(self):
-        self.green_text_end = self.global_info_bar.score + 0.5
+        self.green_text_end = self.global_info_bar.get_time_elapsed() + 0.5
         self.phrase_colour = GREEN
         self.render_phrase()
 
@@ -1303,7 +1303,7 @@ class DataDecryption(MiniGame):
         if not DEBUG:
             self.check_time_and_target()
 
-        if self.phrase_colour == GREEN and self.green_text_end < self.global_info_bar.score:
+        if self.phrase_colour == GREEN and self.green_text_end < self.global_info_bar.get_time_elapsed():
             self.phrase_colour = BLACK
             self.new_phrase()
 

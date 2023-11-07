@@ -73,6 +73,9 @@ class InfoBar:
             time_paused += pair[1] - pair[0]
         return time_paused
 
+    def get_time_elapsed(self):
+        return self.score
+
     def click(self, x, y):
         pass
 
