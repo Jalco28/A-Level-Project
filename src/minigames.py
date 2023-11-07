@@ -443,12 +443,10 @@ class DefragDisk(MiniGame):
 
     def setup_blocks(self):
         """
-        How this mess works:
-
         1. Generate all coords
         2. While there are still unallocated tiles:
             - Put a random unallocated tile into a working_list
-            - Between 1 and 10 times try and change the position of one tile in working_list by one square ensuring its in bounds and not already taken
+            - Between 1 and 10 times try and change the position of one tile in working_list by one square ensuring it's in bounds and not already taken
             - If a tile is out of bounds a regeneration is attempted
             - If a tile is already allocated a regeneration is attempted
         """
