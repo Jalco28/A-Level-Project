@@ -1040,9 +1040,11 @@ class BackupFiles(MiniGame):
         x = 403
         x_delta = 50
         y = 160
+
+        #index: (pos, colour)
         self.dots: dict[int, tuple[tuple[int, int], tuple[int, int, int]]] = {}
+
         for i in range(10):
-            #index: (pos, colour)
             self.dots[i] = ((x+i*x_delta, y), WHITE)
 
     def setup_sequence(self):
@@ -1069,26 +1071,26 @@ class BackupFiles(MiniGame):
         self.current_phase = BF_WATCH
         for i in range(length):
             self.set_dot_colour(i, GREY)
-        highlight_duration = 1.2
-        spacing = highlight_duration+0.5
-        start_time = self.global_info_bar.score+spacing
-        self.watch_phase_end = (start_time+(length-1)
-                                * spacing)+highlight_duration+0.5
+        highlight_duration = 1
+        gap = 0.3
+        button_duration = highlight_duration+gap
+        start_time = self.global_info_bar.get_time_elapsed()+gap
+        self.watch_phase_end = start_time+length*button_duration
         for i in range(length):
             buttons = self.sequence[i]
             for button in buttons:
                 if button == 'u':
                     self.up.scheduled_highlights.append(
-                        (start_time+i*spacing, (start_time+i*spacing)+highlight_duration))
+                        (start_time+i*button_duration, (start_time+i*button_duration)+highlight_duration))
                 elif button == 'l':
                     self.left.scheduled_highlights.append(
-                        (start_time+i*spacing, (start_time+i*spacing)+highlight_duration))
+                        (start_time+i*button_duration, (start_time+i*button_duration)+highlight_duration))
                 elif button == 'd':
                     self.down.scheduled_highlights.append(
-                        (start_time+i*spacing, (start_time+i*spacing)+highlight_duration))
+                        (start_time+i*button_duration, (start_time+i*button_duration)+highlight_duration))
                 elif button == 'r':
                     self.right.scheduled_highlights.append(
-                        (start_time+i*spacing, (start_time+i*spacing)+highlight_duration))
+                        (start_time+i*button_duration, (start_time+i*button_duration)+highlight_duration))
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
@@ -1114,7 +1116,7 @@ class BackupFiles(MiniGame):
             self.current_phase = BF_COPY
             self.input_index = 0
 
-        if self.current_phase == BF_COPY:
+        elif self.current_phase == BF_COPY:
             if len(self.keys_currently_pressed) == 0 and len(self.keys_previously_pressed) != 0:
                 inputted_keys = ''.join(
                     sorted(reduce(operator.add, self.keys_previously_pressed)))
