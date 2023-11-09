@@ -21,10 +21,8 @@ class InfoBar:
         else:
             self.mode_text = 'Zen Mode'
         self.score = 0
-        if difficulty == GCSE:
-            self.difficulty_level = 1
-        else:
-            self.difficulty_level = 10
+        self.difficulty_level = 1
+
 
         mode_text = self.font.render(
             self.mode_text, True,  BLACK, GREY)
@@ -75,6 +73,12 @@ class InfoBar:
 
     def get_time_elapsed(self):
         return self.score
+
+    def get_difficulty_level(self):
+        return self.difficulty_level
+
+    def change_difficulty_level(self, delta):
+        self.difficulty_level += delta
 
     def click(self, x, y):
         pass
@@ -127,13 +131,26 @@ class TaskList:
         if DEBUG or main_menu.game.mode == ZEN_MODE:
             for task in Task.TASK_DESCRIPTIONS:
                 self.add_task(task)
+        self.add_task()
 
     def draw(self, screen: pygame.Surface):
         for task in self.tasks:
             task.draw(screen)
         pygame.draw.rect(screen, BLACK, self.rect, 5)
 
-    def update(self):
+    def update(self, difficulty_level):
+        #Difficulty level will increase roughly every 30 secs
+        #In 8 minute game, will reach around 16
+        #At max difficult aim for one new task per 20
+        if len(self.tasks) < 8:
+            # seconds_between_tasks = -2.5*difficulty_level+60
+            seconds_between_tasks = -0.04*(difficulty_level**2)+25
+            new_task_chance = 1/(seconds_between_tasks*60)
+            new_task = random.random() < new_task_chance
+            if new_task:
+                self.add_task()
+
+
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
             for task in self.tasks:
@@ -416,6 +433,7 @@ class DoorsOS:
     def play_game(self):
         self.reset_game()
         self.game_running = True
+        self.new_diff_increase_time()
         escape_exit_code = 0
         while self.game_running:
             for event in pygame.event.get():
@@ -461,9 +479,23 @@ class DoorsOS:
         self.current_mini_game = minigame(self.info_bar)
         self.panels[1] = self.current_mini_game
 
+    def increase_difficulty_level(self):
+        self.last_diff_increase_time = self.info_bar.get_time_elapsed()
+        self.info_bar.change_difficulty_level(1)
+        self.new_diff_increase_time()
+
+    def new_diff_increase_time(self):
+        time_till_change = random.randint(25,35)
+        self.next_diff_increase_time = self.info_bar.get_time_elapsed()+time_till_change
+
     def update_panels(self):
+        if self.info_bar.get_time_elapsed()>self.next_diff_increase_time:
+            self.increase_difficulty_level()
         for panel in self.panels:
-            panel.update()
+            if isinstance(panel, TaskList):
+                panel.update(self.info_bar.get_difficulty_level())
+            else:
+                panel.update()
 
         if self.current_mini_game.ready_to_exit:
             if self.current_mini_game.success:
