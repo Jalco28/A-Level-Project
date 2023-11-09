@@ -36,6 +36,7 @@ class MiniGame:
         self.sub_surface = pygame.Surface(self.rect.size)
         self.questioning_forfeit = False
         self.countdown_start_time = None
+        self.forfeited = False
 
     def draw(self, screen: pygame.Surface):
         raise NotImplementedError('Can\'t draw base minigame')
@@ -88,6 +89,7 @@ class MiniGame:
     def confirm_forfeit(self):
         self.running = False
         self.success = False
+        self.forfeited = True
         self.ending_message = self.font.render(
             'Task Forfeited!', True, BLACK, GREY)
         self.ending_message_rect = self.ending_message.get_rect(
@@ -1348,7 +1350,7 @@ class DataCompression(MiniGame):
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
         self.num_rows_cleared = 0
-        self.row_clear_target= random.randint(4, 6)
+        self.row_clear_target = random.randint(4, 6)
         self.info_bar = TimeInfoBar(500, global_info_bar)
         self.info_bar.add_custom_field(
             'Rows to clear', self.rows_to_clear)

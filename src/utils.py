@@ -3,6 +3,7 @@ from constants import *
 import pygame
 import random
 from math import radians, sin, sqrt, degrees, pi
+from statistics import median
 import requests
 import json
 from datetime import date, timedelta
@@ -864,7 +865,8 @@ class LeaderBoard:
         self.score_text_rect = self.score_text.get_rect(
             centery=179, right=LeaderBoard.VERTICAL_LINES[2]-10)
 
-        self.difficulty_text = self.font.render('Difficulty', True, BLACK, GREY)
+        self.difficulty_text = self.font.render(
+            'Difficulty', True, BLACK, GREY)
         self.difficulty_text_rect = self.difficulty_text.get_rect(
             centery=179, right=self.rect.right-10)
 
@@ -901,7 +903,8 @@ class LeaderBoard:
         if data['difficulty'] != self.difficulty and self.difficulty != 'All':
             return False
         date_achieved = data['date'].split('-')
-        date_achieved = date(int(date_achieved[2]), int(date_achieved[1]), int(date_achieved[0]))
+        date_achieved = date(int(date_achieved[2]), int(
+            date_achieved[1]), int(date_achieved[0]))
 
         if self.time_period == 'Past day':
             delta = timedelta(days=1)
@@ -924,9 +927,11 @@ class LeaderBoard:
         return True
 
     def update_rows(self):
-        filtered_data = [data for data in self.all_data if self.matches_filters(data)]
+        filtered_data = [
+            data for data in self.all_data if self.matches_filters(data)]
         filtered_data.sort(key=lambda x: x['score'], reverse=True)
-        self.rows = [LeaderBoardRow((self.rect.left, self.rect.top+((i+1)*38)), data, i+1) for i, data in enumerate(filtered_data[:20])]
+        self.rows = [LeaderBoardRow((self.rect.left, self.rect.top+((i+1)*38)), data, i+1)
+                     for i, data in enumerate(filtered_data[:20])]
 
 
 class LeaderBoardRow:
@@ -939,15 +944,18 @@ class LeaderBoardRow:
         self.position_text_rect = self.position_text.get_rect(
             centery=self.rect.centery, right=LeaderBoard.VERTICAL_LINES[0]-10)
 
-        self.username_text = self.font.render(data['username'], True, BLACK, GREY)
+        self.username_text = self.font.render(
+            data['username'], True, BLACK, GREY)
         self.username_text_rect = self.username_text.get_rect(
             centery=self.rect.centery, right=LeaderBoard.VERTICAL_LINES[1]-10)
 
-        self.score_text = self.font.render(str(data['score']), True, BLACK, GREY)
+        self.score_text = self.font.render(
+            str(data['score']), True, BLACK, GREY)
         self.score_text_rect = self.score_text.get_rect(
             centery=self.rect.centery, right=LeaderBoard.VERTICAL_LINES[2]-10)
 
-        self.difficulty_text = self.font.render(data['difficulty'], True, BLACK, GREY)
+        self.difficulty_text = self.font.render(
+            data['difficulty'], True, BLACK, GREY)
         self.difficulty_text_rect = self.difficulty_text.get_rect(
             centery=self.rect.centery, right=self.rect.right-10)
 
@@ -979,3 +987,6 @@ def rect_full_collision(big: pygame.Rect, small: pygame.Rect):
     if small.right > big.right:
         return False
     return True
+
+def step_towards_number(value, step_size, target):
+    return median([value-step_size, value+step_size, target])

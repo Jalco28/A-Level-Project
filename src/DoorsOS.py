@@ -9,7 +9,7 @@ import requests
 
 
 class InfoBar:
-    def __init__(self, mode, difficulty):
+    def __init__(self, mode):
         self.rect = pygame.Rect(5, 5, SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.1)
         self.FONT_SIZE = 40
         self.mode = mode
@@ -22,7 +22,6 @@ class InfoBar:
             self.mode_text = 'Zen Mode'
         self.score = 0
         self.difficulty_level = 1
-
 
         mode_text = self.font.render(
             self.mode_text, True,  BLACK, GREY)
@@ -85,8 +84,10 @@ class InfoBar:
 
 
 class FrustrationBar:
-    def __init__(self):
-        self.frustration_level = 50
+    def __init__(self, tasklist, global_info_bar):
+        self.global_info_bar: InfoBar = global_info_bar
+        self.tasklist: TaskList = tasklist
+        self.frustration_level = 0
         self.WIDTH = SCREEN_WIDTH * 0.05
         self.HEIGHT = SCREEN_HEIGHT * 0.85
         self.rect = pygame.Rect(SCREEN_WIDTH-self.WIDTH-40,
@@ -99,6 +100,12 @@ class FrustrationBar:
         self.text_rect = pygame.Rect(
             0, 0, self.label.get_width(), self.label.get_height())
         self.text_rect.center = (self.rect.centerx+63, self.rect.centery)
+        self.new_target_time = 0
+        self.target_reached = False
+        self.number_of_tasks_forfeited = 0
+        self.target = 0
+        self.game_over = False
+        self.new_target()
 
     def draw(self, screen: pygame.Surface):
         red_rect = pygame.Rect(self.rect.left, 0, self.WIDTH,
@@ -116,14 +123,62 @@ class FrustrationBar:
         screen.blit(self.label, self.text_rect)
 
     def update(self):
-        self.frustration_level = self.frustration_level % 101
+        if self.frustration_level == 100:
+                self.game_over = True
+        if self.global_info_bar.get_time_elapsed() > self.new_target_time and self.target_reached:
+            self.new_target()
+
+        distance_to_target = self.frustration_level - self.target
+        if abs(distance_to_target) <= 1.5:
+            # print(f'Reached Target {self.TEMP}')
+            # self.TEMP += 1
+            self.frustration_level = self.target
+            if not self.target_reached:
+                self.new_target_time = self.global_info_bar.get_time_elapsed()+1.5
+            self.target_reached = True
+        else:
+            self.frustration_level -= 0.015*distance_to_target
+
+    def change_tasks_forfeited(self, delta):
+        self.number_of_tasks_forfeited += delta
+
+    def get_game_over(self):
+        return self.game_over
+
+    def new_target(self):
+        try:
+            if self.tasklist.get_time_full() > 8:
+                self.target = 100
+                return
+        except TypeError:
+            pass
+        self.target_reached = False
+        total_priority = self.tasklist.get_total_priority()  # Min 0, max 56
+        number_of_tasks = self.tasklist.get_number_of_tasks()  # Min 0, max 8
+        weighted_priority = total_priority/56
+        weighted_tasks = number_of_tasks/8
+
+        difficulty_level = self.global_info_bar.get_difficulty_level()
+        average = (weighted_priority+weighted_tasks)/2
+        new_target = average*100 + \
+            random.randint(-difficulty_level*2, difficulty_level*2) + \
+            0.05*self.number_of_tasks_forfeited
+        # bias towards old target
+        target_difference = abs(new_target - self.target)
+        new_target = step_towards_number(new_target, 0.125*target_difference, self.target)
+
+        self.target = max(0, new_target)
+        if self.target > 95 and random.random() < 1/(5*60):
+            self.target = 100
+
 
     def click(self, x, y):
         pass
 
 
 class TaskList:
-    def __init__(self):
+    def __init__(self, global_info_bar):
+        self.global_info_bar: InfoBar = global_info_bar
         self.rect = pygame.Rect(
             SCREEN_WIDTH*0.715, SCREEN_HEIGHT*0.13, SCREEN_WIDTH*0.2, SCREEN_HEIGHT * 0.85+1)
         self.tasks: list[Task] = []
@@ -132,24 +187,30 @@ class TaskList:
             for task in Task.TASK_DESCRIPTIONS:
                 self.add_task(task)
         self.add_task()
+        self.start_time_full = None
 
     def draw(self, screen: pygame.Surface):
         for task in self.tasks:
             task.draw(screen)
         pygame.draw.rect(screen, BLACK, self.rect, 5)
 
+    def get_time_full(self):
+        if self.start_time_full is None:
+            return None
+        return self.global_info_bar.get_time_elapsed()-self.start_time_full
+
     def update(self, difficulty_level):
-        #Difficulty level will increase roughly every 30 secs
-        #In 8 minute game, will reach around 16
-        #At max difficult aim for one new task per 20
+        if len(self.tasks) == 8 and self.start_time_full is None:
+            self.start_time_full = self.global_info_bar.get_time_elapsed()
         if len(self.tasks) < 8:
-            # seconds_between_tasks = -2.5*difficulty_level+60
+            self.start_time_full = None
+
+        if len(self.tasks) < 8:
             seconds_between_tasks = -0.04*(difficulty_level**2)+25
             new_task_chance = 1/(seconds_between_tasks*60)
             new_task = random.random() < new_task_chance
             if new_task:
                 self.add_task()
-
 
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
@@ -158,6 +219,15 @@ class TaskList:
                     task.click(x, y)
         for task in self.tasks:
             task.update()
+
+    def get_total_priority(self):
+        priority = 0
+        for task in self.tasks:
+            priority += task.get_priority()
+        return priority
+
+    def get_number_of_tasks(self):
+        return len(self.tasks)
 
     def add_task(self, description=None):
         if len(self.tasks) < 8:
@@ -219,21 +289,25 @@ class Task:
         else:
             self.description = description
         self.clicks_to_handle = []
+        self.priority = Task.TASK_PRIORITIES[self.description]
 
         self.time_required = random.randint(
-            1, Task.TASK_PRIORITIES[self.description])
+            1, self.priority)
 
         self.description_text = self.description_font.render(
             self.description, True, BLACK)
 
         self.priority_text = self.sub_font.render(
-            f'Priority: {Task.TASK_PRIORITIES[self.description]}', True, BLACK)
+            f'Priority: {self.priority}', True, BLACK)
 
         self.time_text = self.sub_font.render(
             f'Time required: {self.time_required}', True, BLACK)
 
         self.play_button = Button(
             'Play mini-game', self.rect.right-103, self.rect.bottom-43, BLACK, GREY, 25, self.play_button_action)
+
+    def get_priority(self):
+        return self.priority
 
     def play_button_action(self):
         if isinstance(main_menu.game.current_mini_game, minigames.EmptyMiniGame):
@@ -318,9 +392,9 @@ class MainMenu:
     def bypass_school_webwarning(self):
         url = "http://10.50.10.254:4100/wbo"
         payload = {"redirect": "http://140.238.101.107/",
-                    "helper": "Default-WebBlocker",
-                    "action": "warn",
-                    "url": "140.238.101.107"}
+                   "helper": "Default-WebBlocker",
+                   "action": "warn",
+                   "url": "140.238.101.107"}
         requests.post(url, data=payload, verify=False)
 
     def choose_difficulty(self):
@@ -419,9 +493,9 @@ class DoorsOS:
 
     def reset_game(self):
         self.paused = False
-        self.info_bar = InfoBar(self.mode, self.difficulty)
-        self.task_list = TaskList()
-        self.frustration_bar = FrustrationBar()
+        self.info_bar = InfoBar(self.mode)
+        self.task_list = TaskList(self.info_bar)
+        self.frustration_bar = FrustrationBar(self.task_list, self.info_bar)
         self.current_mini_game = minigames.EmptyMiniGame(self.info_bar)
         self.panels: list[InfoBar | FrustrationBar
                           | TaskList | minigames.MiniGame | Button] = [self.info_bar,
@@ -485,11 +559,11 @@ class DoorsOS:
         self.new_diff_increase_time()
 
     def new_diff_increase_time(self):
-        time_till_change = random.randint(25,35)
+        time_till_change = random.randint(25, 35)
         self.next_diff_increase_time = self.info_bar.get_time_elapsed()+time_till_change
 
     def update_panels(self):
-        if self.info_bar.get_time_elapsed()>self.next_diff_increase_time:
+        if self.info_bar.get_time_elapsed() > self.next_diff_increase_time:
             self.increase_difficulty_level()
         for panel in self.panels:
             if isinstance(panel, TaskList):
@@ -498,11 +572,16 @@ class DoorsOS:
                 panel.update()
 
         if self.current_mini_game.ready_to_exit:
-            if self.current_mini_game.success:
-                self.frustration_bar.frustration_level -= 10
-            else:
-                self.frustration_bar.frustration_level += 10
+            # if self.current_mini_game.success:
+            #     self.frustration_bar.change_net_mingame_score(10)
+            # else:
+            #     self.frustration_bar.change_net_mingame_score(-10)
+            if self.current_mini_game.forfeited:
+                self.frustration_bar.change_tasks_forfeited(1)
             self.change_minigame(minigames.EmptyMiniGame)
+
+        if self.frustration_bar.get_game_over():
+            self.end_game()
 
     def update_screen(self):
         self.screen.fill(WHITE)
