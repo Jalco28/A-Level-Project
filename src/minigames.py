@@ -1347,14 +1347,19 @@ class DataCompression(MiniGame):
 
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
-        self.blocks_remaining = random.randint(20, 25)
+        self.num_rows_cleared = 0
+        self.row_clear_target= random.randint(4, 6)
         self.info_bar = TimeInfoBar(500, global_info_bar)
         self.info_bar.add_custom_field(
-            'Blocks Remaining', self.blocks_remaining)
+            'Rows to clear', self.rows_to_clear)
         self.setup_images()
         # Grid Coord -> colour
         self.blocked_slots = {(i, 13): None for i in range(11)}
         self.new_block()
+
+    @property
+    def rows_to_clear(self):
+        return self.row_clear_target-self.num_rows_cleared
 
     def setup_images(self):
         self.colours = ['blue', 'green', 'pink', 'purple', 'red', 'yellow']
@@ -1414,16 +1419,15 @@ class DataCompression(MiniGame):
 
     def new_block(self):
         self.check_completed_rows()
-        if self.blocks_remaining == 0:
+        if self.rows_to_clear <= 0:
             self.running = False
             self.success = True
             self.ending_message = self.font.render(
                 'Data Successfully Compressed!', True, BLACK, GREY)
             self.ending_message_rect = self.ending_message.get_rect(
                 center=self.sub_rect.center)
-        self.blocks_remaining -= 1
         self.info_bar.set_custom_field_value(
-            'Blocks Remaining', self.blocks_remaining)
+            'Rows to clear', self.rows_to_clear)
         new_colour = next(self.colours)
         self.block = DCBlock(
             self.surfaces[new_colour], new_colour, self.global_info_bar)
@@ -1444,6 +1448,7 @@ class DataCompression(MiniGame):
             if len(taken_slots_in_row) == 11:
                 cleared_rows.append(row_number)
 
+        self.num_rows_cleared += len(cleared_rows)
         for row_number in cleared_rows:
             for item in sorted(self.blocked_slots.items(), key=lambda x: x[0][1], reverse=True):
                 coord, colour = item
