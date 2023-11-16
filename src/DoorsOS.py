@@ -709,10 +709,8 @@ class LearningMode:
                                 0.75, SCREEN_HEIGHT*(2/6), BLACK, GREY, font_size, self.enter_CS)
         self.DC_button = Button('Data Compression', SCREEN_WIDTH *
                                 0.75, SCREEN_HEIGHT*(3/6), BLACK, GREY, font_size, self.enter_DC)
-        self.MT_button = Button('Malware Threat', SCREEN_WIDTH*0.75,
-                                SCREEN_HEIGHT*(4/6), BLACK, GREY, font_size, self.enter_MT)
         self.TS_button = Button('Task Scheduling', SCREEN_WIDTH *
-                                0.75, SCREEN_HEIGHT*(5/6), BLACK, GREY, font_size, self.enter_TS)
+                                0.75, SCREEN_HEIGHT*(4/6), BLACK, GREY, font_size, self.enter_TS)
 
         self.exit_button = Button(
             'Back', SCREEN_WIDTH*0.95, SCREEN_HEIGHT*0.05, BLACK, GREY, font_size, self.exit)
@@ -735,8 +733,6 @@ class LearningMode:
             SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/CS.png')
         self.DC_image = Image(
             SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/DC.png')
-        self.MT_image = Image(
-            SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/MT.png')
         self.TS_image = Image(
             SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 'images/LM/TS.png')
 
@@ -754,7 +750,6 @@ class LearningMode:
                        self.BF_button,
                        self.CS_button,
                        self.DC_button,
-                       self.MT_button,
                        self.TS_button,
                        self.exit_button]
 
@@ -822,9 +817,6 @@ class LearningMode:
 
     def enter_DC(self):
         self.panels = [self.DC_image, self.back_button]
-
-    def enter_MT(self):
-        self.panels = [self.MT_image, self.back_button]
 
     def enter_TS(self):
         self.panels = [self.TS_image, self.back_button]
