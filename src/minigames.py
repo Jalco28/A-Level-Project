@@ -1043,7 +1043,7 @@ class BackupFiles(MiniGame):
         x_delta = 50
         y = 160
 
-        #index: (pos, colour)
+        # index: (pos, colour)
         self.dots: dict[int, tuple[tuple[int, int], tuple[int, int, int]]] = {}
 
         for i in range(10):

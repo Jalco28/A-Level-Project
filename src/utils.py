@@ -966,6 +966,9 @@ class LeaderBoardRow:
         screen.blit(self.difficulty_text, self.difficulty_text_rect)
         pygame.draw.rect(screen, BLACK, self.rect, 1)
 
+    def click(self, x, y):
+        pass
+
 
 def tuple_addition(a, b):
     return tuple(sum(x) for x in zip(a, b))
@@ -987,6 +990,7 @@ def rect_full_collision(big: pygame.Rect, small: pygame.Rect):
     if small.right > big.right:
         return False
     return True
+
 
 def step_towards_number(value, step_size, target):
     return median([value-step_size, value+step_size, target])

@@ -84,10 +84,11 @@ class InfoBar:
 
 
 class FrustrationBar:
-    def __init__(self, tasklist, global_info_bar):
+    def __init__(self, tasklist, mode, global_info_bar):
         self.global_info_bar: InfoBar = global_info_bar
         self.tasklist: TaskList = tasklist
         self.frustration_level = 0
+        self.mode = mode
         self.WIDTH = SCREEN_WIDTH * 0.05
         self.HEIGHT = SCREEN_HEIGHT * 0.85
         self.rect = pygame.Rect(SCREEN_WIDTH-self.WIDTH-40,
@@ -123,8 +124,10 @@ class FrustrationBar:
         screen.blit(self.label, self.text_rect)
 
     def update(self):
+        if self.mode == ZEN_MODE:
+            return
         if self.frustration_level == 100:
-                self.game_over = True
+            self.game_over = True
         if self.global_info_bar.get_time_elapsed() > self.new_target_time and self.target_reached:
             self.new_target()
 
@@ -165,12 +168,12 @@ class FrustrationBar:
             0.05*self.number_of_tasks_forfeited
         # bias towards old target
         target_difference = abs(new_target - self.target)
-        new_target = step_towards_number(new_target, 0.125*target_difference, self.target)
+        new_target = step_towards_number(
+            new_target, 0.125*target_difference, self.target)
 
         self.target = max(0, new_target)
         if self.target > 95 and random.random() < 1/(5*60):
             self.target = 100
-
 
     def click(self, x, y):
         pass
@@ -482,20 +485,22 @@ class MainMenu:
 class DoorsOS:
     def __init__(self, clock, screen, difficulty, mode):
         self.clock = clock
-        self.screen = screen
+        self.screen: pygame.Surface = screen
         self.exit_code = 0
         self.mode = mode
         self.difficulty = difficulty
         self.resume_button = Button(
             'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.unpause_game)
         self.exit_to_main_menu_button = Button(
-            'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, self.end_game)
+            'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, self.game_over_screen)
+        self.submit_button = Button(
+            'Submit Score', SCREEN_WIDTH/2, SCREEN_HEIGHT*(3/4), BLACK, GREY, 50, self.submit_score)
 
     def reset_game(self):
         self.paused = False
         self.info_bar = InfoBar(self.mode)
         self.task_list = TaskList(self.info_bar)
-        self.frustration_bar = FrustrationBar(self.task_list, self.info_bar)
+        self.frustration_bar = FrustrationBar(self.task_list, self.mode, self.info_bar)
         self.current_mini_game = minigames.EmptyMiniGame(self.info_bar)
         self.panels: list[InfoBar | FrustrationBar
                           | TaskList | minigames.MiniGame | Button] = [self.info_bar,
@@ -508,13 +513,13 @@ class DoorsOS:
         self.reset_game()
         self.game_running = True
         self.new_diff_increase_time()
-        escape_exit_code = 0
+        paused_interval = 0
         while self.game_running:
             for event in pygame.event.get():
                 self.current_mini_game.take_event(event)
 
                 if event.type == pygame.QUIT:
-                    self.end_game(True)
+                    self.exit_to_main_menu(True)
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -524,12 +529,8 @@ class DoorsOS:
 
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        escape_exit_code = self.pause_game()
-                        if escape_exit_code == pygame.QUIT:
-                            self.game_running = False
-                        else:
-                            self.info_bar.paused_intervals.append(
-                                escape_exit_code)
+                        paused_interval = self.pause_game()
+                        self.info_bar.paused_intervals.append(paused_interval)
 
                 elif event.type == pygame.MOUSEWHEEL:
                     self.frustration_bar.frustration_level += event.y
@@ -543,7 +544,7 @@ class DoorsOS:
             self.update_screen()
             self.clock.tick(FPS)
 
-    def end_game(self, complete_exit=False):
+    def exit_to_main_menu(self, complete_exit=False):
         self.game_running = False
         if complete_exit:
             self.exit_code = pygame.QUIT
@@ -581,7 +582,7 @@ class DoorsOS:
             self.change_minigame(minigames.EmptyMiniGame)
 
         if self.frustration_bar.get_game_over():
-            self.end_game()
+            self.game_over_screen()
 
     def update_screen(self):
         self.screen.fill(WHITE)
@@ -598,7 +599,7 @@ class DoorsOS:
         while self.paused:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    return pygame.QUIT
+                    self.exit_to_main_menu(True)
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.paused = False
@@ -614,6 +615,68 @@ class DoorsOS:
         self.panels = [
             self.info_bar, self.current_mini_game, self.frustration_bar, self.task_list]
         return (start_time, time.time())
+
+    def game_over_screen(self):
+        if self.mode == ZEN_MODE:
+            self.game_running = False
+            self.exit_to_main_menu()
+        self.panels = [self.info_bar, self.submit_button]
+        self.name = ''
+        font = pygame.font.SysFont('Arial', 50)
+        message_1 = font.render('Game Over!', True, BLACK, WHITE)
+        message_2 = font.render(
+            'If you want to upload your score to the leaderboard, enter a name, otherwise just press submit', True, BLACK, WHITE)
+        message_1_rect = message_1.get_rect(center=(SCREEN_WIDTH/2, 200))
+        message_2_rect = message_2.get_rect(center=(SCREEN_WIDTH/2, 400))
+
+        text_box_rect = pygame.Rect(0, 0, 650, 80)
+        text_box_rect.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT/2+100)
+        while self.game_running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.exit_to_main_menu(True)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_BACKSPACE:
+                        self.name = self.name[:-1]
+                    # Key pressed is alpha key
+                    elif event.key in range(97, 123) and len(self.name) <= 20:
+                        self.name += PYGAME_KEY_TO_LETTER[event.key]
+                    elif event.key in range(48, 58) and len(self.name) <= 20:
+                        self.name += str(event.key-48)
+                    elif event.key == pygame.K_SPACE and len(self.name) <= 20:
+                        self.name += ' '
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.send_click_to_panel(event)
+
+            rendered_name = font.render(self.name, True, BLACK, GREY)
+
+            self.screen.fill(WHITE)
+            for panel in self.panels:
+                panel.draw(self.screen)
+            pygame.draw.rect(self.screen, GREY, text_box_rect)
+            pygame.draw.rect(self.screen, BLACK, text_box_rect, 2)
+            self.screen.blit(rendered_name, rendered_name.get_rect(
+                center=text_box_rect.center))
+            self.screen.blit(message_1, message_1_rect)
+            self.screen.blit(message_2, message_2_rect)
+
+            pygame.display.update()
+            pygame.display.set_caption(
+                f'DoorsOS {round(self.clock.get_fps())}fps')
+            self.clock.tick(FPS)
+
+    def submit_score(self):
+        if self.name != '':
+            payload = {
+                'username': self.name,
+                'score': int(self.info_bar.get_time_elapsed()),
+                'difficulty': 'A-Level' if self.difficulty else 'GCSE',
+                'date': date.today().strftime(r'%d-%m-%Y')
+            }
+            requests.post(
+                'http://140.238.101.107/doorsos/new.php', data=payload)
+        self.exit_to_main_menu()
 
     def send_click_to_panel(self, event: pygame.event.Event):
         x, y = event.pos

@@ -1,6 +1,7 @@
 from math import radians
 from datetime import datetime
 import random
+from string import ascii_lowercase
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 1920*0.9, 1080*0.9
 MINIGAME_WIDTH, MINIGAME_HEIGHT = SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85
@@ -122,5 +123,7 @@ DC_TILES = {
                  2: [(0, 2), (1, 2), (1, 1), (2, 1)],
                  3: [(1, 0), (1, 1), (2, 1), (2, 2)]}
 }
+PYGAME_KEY_TO_LETTER = {i+97: letter for i,
+                        letter in enumerate(ascii_lowercase)}
 SCHOOL_MODE = False
 DEBUG = False
