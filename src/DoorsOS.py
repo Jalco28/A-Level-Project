@@ -528,16 +528,13 @@ class DoorsOS:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.send_click_to_panel(event)
-                    if event.button == 3:
+                    if event.button == 3 and DEBUG:
                         self.task_list.add_task()
 
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         paused_interval = self.pause_game()
                         self.info_bar.paused_intervals.append(paused_interval)
-
-                elif event.type == pygame.MOUSEWHEEL:
-                    self.frustration_bar.frustration_level += event.y
 
             if not self.game_running:
                 break
