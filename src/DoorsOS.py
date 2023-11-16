@@ -437,6 +437,8 @@ class MainMenu:
             self.running = False
 
     def reset_panels(self):
+        self.gcse_button.click()
+        self.regular_button.click()
         self.panels = [self.play_button,
                        self.leaderboard_button, self.learning_button, self.exit_button]
 
@@ -450,10 +452,12 @@ class MainMenu:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.send_click_to_panel(event)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE and self.back_button in self.panels:
+                        self.reset_panels()
 
             if not self.running:
                 break
@@ -773,6 +777,12 @@ class LearningMode:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.send_click_to_panel(event)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        if len(self.panels) == 2:
+                            self.buttons_to_panels()
+                        else:
+                            self.exit()
             if not self.running:
                 break
             pygame.display.set_caption(
@@ -912,6 +922,9 @@ class LeaderBoardScreen:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.send_click_to_panel(event)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.exit()
             if not self.running:
                 break
             pygame.display.set_caption(

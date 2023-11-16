@@ -50,7 +50,7 @@ class ToggleButton(Button):
     def set_partners(self, partners):
         self.partners = partners
 
-    def click(self, x, y):
+    def click(self, *args):
         self.active = True
         for partner in self.partners:
             partner.active = False
