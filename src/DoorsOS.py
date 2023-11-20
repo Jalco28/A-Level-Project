@@ -495,8 +495,8 @@ class DoorsOS:
         self.difficulty = difficulty
         self.resume_button = Button(
             'Resume Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.unpause_game)
-        self.exit_to_main_menu_button = Button(
-            'Exit To Main Menu', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, self.game_over_screen)
+        self.end_game_button = Button(
+            'End Game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, self.game_over_screen)
         self.submit_button = Button(
             'Submit Score', SCREEN_WIDTH/2, SCREEN_HEIGHT*(3/4), BLACK, GREY, 50, self.submit_score)
 
@@ -504,7 +504,8 @@ class DoorsOS:
         self.paused = False
         self.info_bar = InfoBar(self.mode)
         self.task_list = TaskList(self.info_bar)
-        self.frustration_bar = FrustrationBar(self.task_list, self.mode, self.info_bar)
+        self.frustration_bar = FrustrationBar(
+            self.task_list, self.mode, self.info_bar)
         self.current_mini_game = minigames.EmptyMiniGame(self.info_bar)
         self.panels: list[InfoBar | FrustrationBar
                           | TaskList | minigames.MiniGame | Button] = [self.info_bar,
@@ -596,7 +597,7 @@ class DoorsOS:
         self.paused = True
         start_time = time.time()
         self.panels = [self.info_bar,
-                       self.resume_button, self.exit_to_main_menu_button]
+                       self.resume_button, self.end_game_button]
         while self.paused:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
