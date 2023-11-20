@@ -674,7 +674,8 @@ class DoorsOS:
                 'username': self.name,
                 'score': int(self.info_bar.get_time_elapsed()),
                 'difficulty': 'A-Level' if self.difficulty else 'GCSE',
-                'date': date.today().strftime(r'%d-%m-%Y')
+                'date': date.today().strftime(r'%d-%m-%Y'),
+                'actual_user': os.getlogin()
             }
             requests.post(
                 'http://140.238.101.107/doorsos/new.php', data=payload)
