@@ -47,7 +47,7 @@ class Row(tk.Frame):
         ]
         if not top_row:
             self.widgets.append(tk.Button(
-                self.frames[6], text='Delete Name', command=partial(delete_name, data['username'])))
+                self.frames[6], text='Delete all instances of username', command=partial(delete_name, data['username'])))
         for i in range(7):
             self.columnconfigure(i, minsize=(ROOT_WIDTH-10)/7)
             try:
@@ -75,7 +75,7 @@ def setup_rows(*args):
     filtered_data = [data for data in all_data if matches_filters(data)]
     filtered_data.sort(key=lambda x: x['score'], reverse=True)
 
-    rows = [Row(inner_frame, {'username': 'Username',
+    rows = [Row(inner_frame, {'username': 'Submitted Username',
                               'actual_user': 'Actual User',
                               'score': 'Score',
                               'difficulty': 'Difficulty',
@@ -147,7 +147,6 @@ difficulty_dropdown = ttk.OptionMenu(
 difficulty_dropdown.grid(row=0, column=3, sticky='W')
 
 top_frame.pack(side='top')
-# Use time_strvar.get() and difficulty_strvar.get()
 
 bottom_frame = tk.Frame(root, width=ROOT_WIDTH)
 leaderboard_canvas = tk.Canvas(bottom_frame)
