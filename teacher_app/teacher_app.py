@@ -116,14 +116,23 @@ def matches_filters(data):
 
     return True
 
+def check_auto_refresh():
+    if auto_refresh_var.get():
+        setup_rows()
+    root.after(30*1000, check_auto_refresh)
 
 root = tk.Tk()
 root.title('DoorsOS Companion App')
 root.geometry(f'{ROOT_WIDTH}x{ROOT_HEIGHT}')
 
 top_frame = tk.Frame(root)
-for i in range(4):
-    top_frame.columnconfigure(i, minsize=ROOT_WIDTH/4)
+middle_column_width = 50
+top_frame.columnconfigure(0, minsize=(ROOT_WIDTH-middle_column_width)/4)
+top_frame.columnconfigure(1, minsize=(ROOT_WIDTH-middle_column_width)/4)
+top_frame.columnconfigure(2, minsize=middle_column_width)
+top_frame.columnconfigure(3, minsize=(ROOT_WIDTH-middle_column_width)/4)
+top_frame.columnconfigure(4, minsize=(ROOT_WIDTH-middle_column_width)/4)
+
 time_label = tk.Label(top_frame, text='Time Period:')
 time_label.grid(row=0, column=0, sticky='E')
 time_strvar = tk.StringVar(top_frame)
@@ -136,15 +145,24 @@ time_dropdown = ttk.OptionMenu(
     top_frame, time_strvar, times[-1], *times, command=setup_rows)
 time_dropdown.grid(row=0, column=1, sticky='W')
 
+refresh_frame = tk.Frame(top_frame)
+# auto_refresh_label = tk.Label(refresh_frame, text='Auto Refresh:')
+auto_refresh_var = tk.IntVar(refresh_frame)
+auto_refresh_tickbox = tk.Checkbutton(refresh_frame, text='Auto Refresh', variable=auto_refresh_var)
+refresh_button = tk.Button(refresh_frame, text='Refresh', command=setup_rows)
+auto_refresh_tickbox.grid(row=0,column=0)
+refresh_button.grid(row=0, column=1)
+refresh_frame.grid(row=0, column=2)
+
 difficulty_label = tk.Label(top_frame, text='Time Period:')
-difficulty_label.grid(row=0, column=2, sticky='E')
+difficulty_label.grid(row=0, column=3, sticky='E')
 difficulty_strvar = tk.StringVar(top_frame)
 difficulties = ['All',
                 'GCSE',
                 'A-Level']
 difficulty_dropdown = ttk.OptionMenu(
     top_frame, difficulty_strvar, difficulties[0], *difficulties, command=setup_rows)
-difficulty_dropdown.grid(row=0, column=3, sticky='W')
+difficulty_dropdown.grid(row=0, column=4, sticky='W')
 
 top_frame.pack(side='top')
 
@@ -166,4 +184,5 @@ leaderboard_canvas.create_window((0, 0), window=inner_frame, anchor="nw")
 setup_rows()
 
 bottom_frame.pack(side='bottom', fill='both', expand=1)
+root.after(30*1000, check_auto_refresh)
 root.mainloop()
