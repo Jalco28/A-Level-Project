@@ -10,7 +10,7 @@ if len(sys.argv) == 1:
     difficulty = 'A-Level'
     date = '25-10-23'
 else:
-    username, score, difficulty, date = sys.argv[1:]
+    username, score, difficulty, date, actual_user = sys.argv[1:]
 
 with open('record.json', 'r', encoding='utf-8') as f:
     records = json.load(f)
@@ -18,7 +18,8 @@ with open('record.json', 'r', encoding='utf-8') as f:
 records.append({'username': username,
                 'score': int(score),
                 'difficulty': difficulty,
-                'date': date})
+                'date': date,
+                'actual_user': actual_user})
 
 with open('record.json', 'w', encoding='utf-8') as f:
     json.dump(records, f)
