@@ -120,6 +120,8 @@ class STTInfoBar:  # Score, target, time, info bar
 
     def subtract_score(self, delta):
         self.score -= delta
+        if self.score < 0:
+            self.score = 0
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
