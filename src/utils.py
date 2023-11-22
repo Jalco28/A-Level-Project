@@ -389,7 +389,7 @@ class MMGarbage:
 
 class MMWall:
     def __init__(self, left):
-        self.rect = pygame.Rect(left, 0, 10, 70)
+        self.rect = pygame.Rect(left, 0, 10, random.randint(70, 100))
         self.time = random.randint(0, 359)
         self.speed = random.uniform(0.3, 2)
         self.update()

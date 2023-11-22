@@ -253,7 +253,7 @@ class MemoryManagement(MiniGame):
 
     @property
     def garbage_left_text(self):
-        return self.instruction_font.render(f'Garbage Left: {self.get_garbage_left()}', True, BLACK, WHITE)
+        return self.instruction_font.render(f'Garbage Left: {self.get_garbage_left()}', True, BLACK)
 
     @property
     def catapult_garbage(self):
@@ -277,7 +277,7 @@ class MemoryManagement(MiniGame):
         self.catapult_front.draw(self.sub_surface)
         self.draw_walls(self.sub_surface)
 
-        self.sub_surface.blit(self.garbage_left_text, (200, 150))
+        self.sub_surface.blit(self.garbage_left_text, (10, 80))
         self.info_bar.draw(self.sub_surface)
         self.common_drawing(screen)
 
@@ -359,7 +359,7 @@ class MemoryManagement(MiniGame):
                     bin.highlight_start_time = time.time()
                 break
         self.garbage_dict.pop(ID)
-        if self.garbage_left == 0:
+        if self.garbage_left == 0 and len(self.garbage_dict) == 0:
             self.out_of_garbage = True
 
     def setup_walls(self):
