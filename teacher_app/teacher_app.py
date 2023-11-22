@@ -116,10 +116,12 @@ def matches_filters(data):
 
     return True
 
+
 def check_auto_refresh():
     if auto_refresh_var.get():
         setup_rows()
     root.after(30*1000, check_auto_refresh)
+
 
 root = tk.Tk()
 root.title('DoorsOS Companion App')
@@ -148,9 +150,10 @@ time_dropdown.grid(row=0, column=1, sticky='W')
 refresh_frame = tk.Frame(top_frame)
 # auto_refresh_label = tk.Label(refresh_frame, text='Auto Refresh:')
 auto_refresh_var = tk.IntVar(refresh_frame)
-auto_refresh_tickbox = tk.Checkbutton(refresh_frame, text='Auto Refresh', variable=auto_refresh_var)
+auto_refresh_tickbox = tk.Checkbutton(
+    refresh_frame, text='Auto Refresh', variable=auto_refresh_var)
 refresh_button = tk.Button(refresh_frame, text='Refresh', command=setup_rows)
-auto_refresh_tickbox.grid(row=0,column=0)
+auto_refresh_tickbox.grid(row=0, column=0)
 refresh_button.grid(row=0, column=1)
 refresh_frame.grid(row=0, column=2)
 
