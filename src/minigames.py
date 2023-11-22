@@ -238,19 +238,29 @@ class MemoryManagement(MiniGame):
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
 
-        self.info_bar = STTInfoBar(10*random.randint(5, 10), 60, self.global_info_bar)
+        target = 10*random.randint(18, 28)
+        self.info_bar = STTInfoBar(target, 60, self.global_info_bar)
+        self.garbage_left = random.randint(12, 16)
         self.catapult_back = Image(240, MINIGAME_HEIGHT*0.46,
                                    r'images\MM\catapult_back.png')
         self.catapult_front = Image(240, MINIGAME_HEIGHT*0.46,
                                     r'images\MM\catapult_front.png')
+        self.out_of_garbage = False
         self.setup_bins()
         self.setup_walls()
         self.garbage_dict: dict[int, MMGarbage] = {}
         self.add_garbage()
 
     @property
+    def garbage_left_text(self):
+        return self.instruction_font.render(f'Garbage Left: {self.get_garbage_left()}', True, BLACK, WHITE)
+
+    @property
     def catapult_garbage(self):
         return self.garbage_dict[self.catapult_garbage_ID]
+
+    def get_garbage_left(self):
+        return self.garbage_left
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
@@ -267,6 +277,7 @@ class MemoryManagement(MiniGame):
         self.catapult_front.draw(self.sub_surface)
         self.draw_walls(self.sub_surface)
 
+        self.sub_surface.blit(self.garbage_left_text, (200, 150))
         self.info_bar.draw(self.sub_surface)
         self.common_drawing(screen)
 
@@ -276,6 +287,13 @@ class MemoryManagement(MiniGame):
 
         if not DEBUG:
             self.check_time_and_target()  # Check for game over
+            if self.out_of_garbage:
+                self.running = False
+                self.success = False
+                self.ending_message = self.font.render(
+                    'Out of garbage!', True, BLACK, GREY)
+                self.ending_message_rect = self.ending_message.get_rect(
+                    center=self.sub_rect.center)
 
         for wall in self.walls:
             wall.update()
@@ -292,9 +310,12 @@ class MemoryManagement(MiniGame):
             if click_used:
                 continue
 
-            if self.catapult_garbage.rect.collidepoint(x, y):
-                self.catapult_garbage.grabbed = True
-                click_used = True
+            try:
+                if self.catapult_garbage.rect.collidepoint(x, y):
+                    self.catapult_garbage.grabbed = True
+                    click_used = True
+            except KeyError:  # No garbage in catapult as player has run out
+                pass
             if click_used:
                 continue
 
@@ -322,6 +343,9 @@ class MemoryManagement(MiniGame):
             wall.draw(screen)
 
     def add_garbage(self):
+        self.garbage_left -= 1
+        if self.garbage_left == 0:
+            return
         self.garbage_dict[MMGarbage.ID -
                           1] = MMGarbage(self.delete_garbage, self.walls)
         self.catapult_garbage_ID = MMGarbage.ID - 1
@@ -335,6 +359,8 @@ class MemoryManagement(MiniGame):
                     bin.highlight_start_time = time.time()
                 break
         self.garbage_dict.pop(ID)
+        if self.garbage_left == 0:
+            self.out_of_garbage = True
 
     def setup_walls(self):
         self.walls: list[MMWall] = [
@@ -350,17 +376,22 @@ class MemoryManagement(MiniGame):
 
     def take_event(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEMOTION:
-            if self.catapult_garbage.grabbed:
-                self.catapult_garbage.drag(
-                    *MiniGame.translate_coords(*event.pos))
+            try:
+                if self.catapult_garbage.grabbed:
+                    self.catapult_garbage.drag(
+                        *MiniGame.translate_coords(*event.pos))
+            except KeyError:  # No garbage in catapult as player has run out
+                pass
 
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
-                if self.catapult_garbage.grabbed:
-                    garbage_thrown = self.catapult_garbage.throw()
-                    if garbage_thrown:
-                        self.add_garbage()
-                        # pass
+                try:
+                    if self.catapult_garbage.grabbed:
+                        garbage_thrown = self.catapult_garbage.throw()
+                        if garbage_thrown:
+                            self.add_garbage()
+                except KeyError:  # No garbage in catapult as player has run out
+                    pass
 
 
 class DefragDisk(MiniGame):
