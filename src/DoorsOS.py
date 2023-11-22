@@ -647,6 +647,8 @@ class DoorsOS:
                         self.name += str(event.key-48)
                     elif event.key == pygame.K_SPACE and len(self.name) <= 20:
                         self.name += ' '
+                    elif event.key == pygame.K_RETURN:
+                        self.submit_score()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.send_click_to_panel(event)
