@@ -170,7 +170,8 @@ class RegisterMouseInputs(MiniGame):
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
         self.buttons: dict[int, RMIButton] = {}  # {buttonID:Button object}
-        self.info_bar = STTInfoBar(random.randint(20,35), 60, self.global_info_bar)
+        self.info_bar = STTInfoBar(random.randint(
+            20, 35), 60, self.global_info_bar)
 
     def draw(self, screen: pygame.Surface):
         if not self.running:
@@ -778,7 +779,7 @@ class OrganiseDrivers(MiniGame):
 class UserAuthentication(MiniGame):
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
-        self.info_bar = STTInfoBar(random.randint(15,25), 60, global_info_bar)
+        self.info_bar = STTInfoBar(random.randint(15, 25), 60, global_info_bar)
         self.small_font = pygame.font.SysFont('Arial', 29)
         button_offset = 150
         button_center = (MINIGAME_WIDTH/2)-75
@@ -1226,7 +1227,7 @@ class DataDecryption(MiniGame):
 
     def __init__(self, global_info_bar):
         super().__init__(global_info_bar)
-        self.info_bar = STTInfoBar(random.randint(7,11), 60, global_info_bar)
+        self.info_bar = STTInfoBar(random.randint(7, 11), 60, global_info_bar)
         self.phrase_font = pygame.font.SysFont('Arial', 35)
 
         self.ring_center = (MINIGAME_WIDTH/2, MINIGAME_HEIGHT/2+100)
