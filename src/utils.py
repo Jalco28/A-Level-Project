@@ -202,7 +202,6 @@ class RMIButton:
     IMAGE_NAMES = ['download',
                    'play',
                    'tick',
-                   'cross',
                    'left',
                    'right',
                    'windows',
