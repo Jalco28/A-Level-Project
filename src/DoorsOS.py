@@ -45,6 +45,9 @@ class InfoBar:
         self.difficulty_rect.midleft = (
             self.rect.left+0.7*self.rect.width, self.rect.centery)
 
+    def get_mode(self):
+        return self.mode
+
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
         pygame.draw.rect(screen, BLACK, self.rect, 5, 2)

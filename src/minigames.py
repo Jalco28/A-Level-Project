@@ -117,6 +117,8 @@ class MiniGame:
             self.ending_message_rect = self.ending_message.get_rect(
                 center=self.sub_rect.center)
         elif self.info_bar.time_left == 0:
+            if self.global_info_bar.get_mode() == ZEN_MODE:
+                return
             self.running = False
             self.success = False
             self.ending_message = self.font.render(
@@ -125,6 +127,8 @@ class MiniGame:
                 center=self.sub_rect.center)
 
     def check_time(self):
+        if self.global_info_bar.get_mode() == ZEN_MODE:
+            return
         if self.info_bar.time_left == 0:
             self.running = False
             self.success = False
