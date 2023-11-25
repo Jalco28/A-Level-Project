@@ -129,7 +129,7 @@ class FrustrationBar:
     def update(self):
         if self.mode == ZEN_MODE:
             return
-        if self.frustration_level == 100:
+        if self.frustration_level >= 100:
             self.game_over = True
         if self.global_info_bar.get_time_elapsed() > self.new_target_time and self.target_reached:
             self.new_target()
@@ -176,6 +176,8 @@ class FrustrationBar:
 
         self.target = max(0, new_target)
         if self.target > 95 and random.random() < 1/(5*60):
+            self.target = 100
+        if self.target > 100:
             self.target = 100
 
     def click(self, x, y):
