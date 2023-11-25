@@ -167,7 +167,7 @@ class FrustrationBar:
         difficulty_level = self.global_info_bar.get_difficulty_level()
         average = (weighted_priority+weighted_tasks)/2
         new_target = average*100 + \
-            random.randint(-difficulty_level*2, difficulty_level*2) + \
+            random.randint(round(-difficulty_level*0.25), round(difficulty_level*1.5)) + \
             10*self.number_of_tasks_forfeited
         # bias towards old target
         target_difference = abs(new_target - self.target)
