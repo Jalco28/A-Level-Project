@@ -995,3 +995,6 @@ def rect_full_collision(big: pygame.Rect, small: pygame.Rect):
 
 def step_towards_number(value, step_size, target):
     return median([value-step_size, value+step_size, target])
+
+def add_noise(value, max_up, max_down):
+    return value + random.randint(-max_down, max_up)

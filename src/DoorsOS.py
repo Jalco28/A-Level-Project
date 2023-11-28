@@ -196,6 +196,7 @@ class TaskList:
                 self.add_task(task)
         self.add_task()
         self.start_time_full = None
+        self.generate_new_task_time()
 
     def draw(self, screen: pygame.Surface):
         for task in self.tasks:
@@ -207,18 +208,19 @@ class TaskList:
             return None
         return self.global_info_bar.get_time_elapsed()-self.start_time_full
 
-    def update(self, difficulty_level):
+    def update(self):
         if len(self.tasks) == 8 and self.start_time_full is None:
             self.start_time_full = self.global_info_bar.get_time_elapsed()
         if len(self.tasks) < 8:
             self.start_time_full = None
 
-        if len(self.tasks) < 8:
-            seconds_between_tasks = -0.04*(difficulty_level**2)+25
-            new_task_chance = 1/(seconds_between_tasks*60)
-            new_task = random.random() < new_task_chance
-            if new_task:
+            if self.global_info_bar.get_time_elapsed()>=self.new_task_time:
                 self.add_task()
+                self.generate_new_task_time()
+
+        if len(self.tasks) == 0 and not self.forcing_new_task:
+            self.new_task_time = self.global_info_bar.get_time_elapsed()+4*random.random()
+            self.forcing_new_task = True
 
         while self.clicks_to_handle:
             x, y = self.clicks_to_handle.pop(0)
@@ -227,6 +229,11 @@ class TaskList:
                     task.click(x, y)
         for task in self.tasks:
             task.update()
+
+    def generate_new_task_time(self):
+        seconds_between_tasks = -0.04*(self.global_info_bar.get_difficulty_level()**2)+25
+        self.new_task_time = self.global_info_bar.get_time_elapsed()+add_noise(seconds_between_tasks, 3, 3)
+        self.forcing_new_task = False
 
     def get_total_priority(self):
         priority = 0
@@ -574,10 +581,7 @@ class DoorsOS:
         if self.info_bar.get_time_elapsed() > self.next_diff_increase_time:
             self.increase_difficulty_level()
         for panel in self.panels:
-            if isinstance(panel, TaskList):
-                panel.update(self.info_bar.get_difficulty_level())
-            else:
-                panel.update()
+            panel.update()
 
         if self.current_mini_game.ready_to_exit:
             # if self.current_mini_game.success:
