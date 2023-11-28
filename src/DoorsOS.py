@@ -214,7 +214,7 @@ class TaskList:
         if len(self.tasks) < 8:
             self.start_time_full = None
 
-            if self.global_info_bar.get_time_elapsed()>=self.new_task_time:
+            if self.global_info_bar.get_time_elapsed() >= self.new_task_time:
                 self.add_task()
                 self.generate_new_task_time()
 
@@ -231,8 +231,10 @@ class TaskList:
             task.update()
 
     def generate_new_task_time(self):
-        seconds_between_tasks = -0.04*(self.global_info_bar.get_difficulty_level()**2)+25
-        self.new_task_time = self.global_info_bar.get_time_elapsed()+add_noise(seconds_between_tasks, 3, 3)
+        seconds_between_tasks = -0.04 * \
+            (self.global_info_bar.get_difficulty_level()**2)+25
+        self.new_task_time = self.global_info_bar.get_time_elapsed() + \
+            add_noise(seconds_between_tasks, 3, 3)
         self.forcing_new_task = False
 
     def get_total_priority(self):
@@ -574,8 +576,11 @@ class DoorsOS:
         self.new_diff_increase_time()
 
     def new_diff_increase_time(self):
-        time_till_change = random.randint(25, 35)
-        self.next_diff_increase_time = self.info_bar.get_time_elapsed()+time_till_change
+        if self.mode == ZEN_MODE:
+            self.next_diff_increase_time = float('inf')
+        else:
+            time_till_change = random.randint(25, 35)
+            self.next_diff_increase_time = self.info_bar.get_time_elapsed()+time_till_change
 
     def update_panels(self):
         if self.info_bar.get_time_elapsed() > self.next_diff_increase_time:
@@ -691,7 +696,8 @@ class DoorsOS:
             r = requests.post(
                 'http://140.238.101.107/doorsos/new.php', data=payload)
             if r.status_code != 200:
-                print(f'Score upload failed with code {r.status_code}, {SCHOOL_MODE=}')
+                print(
+                    f'Score upload failed with code {r.status_code}, {SCHOOL_MODE=}')
         self.exit_to_main_menu()
 
     def send_click_to_panel(self, event: pygame.event.Event):
