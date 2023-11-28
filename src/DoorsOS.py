@@ -684,8 +684,10 @@ class DoorsOS:
                 'date': date.today().strftime(r'%d-%m-%Y'),
                 'actual_user': os.getlogin()
             }
-            requests.post(
+            r = requests.post(
                 'http://140.238.101.107/doorsos/new.php', data=payload)
+            if r.status_code != 200:
+                print(f'Score upload failed with code {r.status_code}, {SCHOOL_MODE=}')
         self.exit_to_main_menu()
 
     def send_click_to_panel(self, event: pygame.event.Event):
