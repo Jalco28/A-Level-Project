@@ -296,7 +296,7 @@ class Task:
     def __init__(self, index, parent, description):
         self.parent: TaskList = parent
         self.index = index
-        self.HEIGHT = 103  # Mank number so 8 tasks nicely fit into the list
+        self.HEIGHT = 103  # Apparently odd number so 8 tasks nicely fit into the list
         self.rect = pygame.Rect(self.parent.rect.left, self.parent.rect.top + 1 +
                                 self.index*self.HEIGHT, self.parent.rect.width, self.HEIGHT)
         self.description_font = pygame.font.SysFont('Arial', 35)
@@ -306,7 +306,16 @@ class Task:
         else:
             self.description = description
         self.clicks_to_handle = []
-        self.priority = Task.TASK_PRIORITIES[self.description]
+        self.priority = random.choice([1]*2+\
+                                      [2]*4+\
+                                      [3]*4+\
+                                      [4]*5+\
+                                      [5]*8+\
+                                      [6]*6+\
+                                      [7]*4+\
+                                      [8]*2+\
+                                      [9]*1+\
+                                      [10]*1)
 
         self.time_required = random.randint(
             1, self.priority)
