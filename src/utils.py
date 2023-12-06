@@ -528,9 +528,6 @@ class ODNode:
     def __repr__(self) -> str:
         return str(self.pos)
 
-    def define_partners(self, partners):
-        self.partners: list[ODNode] = partners
-
     def draw(self, surface, success):
         pygame.draw.circle(surface, BLACK, self.pos, self.RADIUS)
         pygame.draw.circle(surface, GREEN if success else BLUE,
