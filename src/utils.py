@@ -694,7 +694,7 @@ class CSOuter:
         screen.blit(self.image, self.rect)
 
     def normalise_angle(self):
-        if self.angle < 0 or self.angle <= 360:
+        if self.angle < 0 or self.angle <= 2*pi:
             self.angle = self.angle % (2*pi)
             if self.angle < 0:
                 self.angle += 2*pi
