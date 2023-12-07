@@ -1236,7 +1236,7 @@ class DataDecryption(MiniGame):
                           letter in enumerate(ascii_uppercase)}
 
     @classmethod
-    def ceaser_shift(cls, text: str, delta: int):
+    def ceasar_shift(cls, text: str, delta: int):
         if delta == 0:
             return text
         shifted_text = ''
@@ -1297,7 +1297,7 @@ class DataDecryption(MiniGame):
         self.unused_phrases.remove(self.correct_phrase)
         self.encrypted_phrase = self.correct_phrase
         while self.encrypted_phrase == self.correct_phrase:
-            self.encrypted_phrase = DataDecryption.ceaser_shift(
+            self.encrypted_phrase = DataDecryption.ceasar_shift(
                 self.correct_phrase, random.randint(0, 25))
         self.render_phrase()
 
@@ -1325,7 +1325,7 @@ class DataDecryption(MiniGame):
             self.render_phrase()
 
     def render_phrase(self):
-        self.rendered_phrase = self.phrase_font.render(DataDecryption.ceaser_shift(
+        self.rendered_phrase = self.phrase_font.render(DataDecryption.ceasar_shift(
             self.encrypted_phrase, self.shift_delta), True, self.phrase_colour, WHITE)
         self.phrase_rect = self.rendered_phrase.get_rect(
             center=(MINIGAME_WIDTH/2, 150))
@@ -1372,7 +1372,7 @@ class DataDecryption(MiniGame):
                 if self.outer_grabbed:
                     self.outer_grabbed = False
                     self.outer.snap()
-                    if DataDecryption.ceaser_shift(self.encrypted_phrase, self.shift_delta) == self.correct_phrase:
+                    if DataDecryption.ceasar_shift(self.encrypted_phrase, self.shift_delta) == self.correct_phrase:
                         self.info_bar.add_score(1)
                         self.make_text_green()
 
