@@ -221,7 +221,7 @@ class RMIButton:
         else:
             image_name = 'images\RMI\\' + \
                 random.choice(RMIButton.IMAGE_NAMES) + '.png'
-        self.image = pygame.image.load(image_name)
+        self.image = pygame.image.load(image_name).convert_alpha()
         # self.image = pygame.transform.smoothscale(self.image, (100, 100))
         self.speed = random.uniform(1.8, 3.7)
 
@@ -283,8 +283,8 @@ class RMIButton:
 class MMBin:
     def __init__(self, center_x, center_y, score):
         self.score = score
-        self.back_image = pygame.image.load(r'images\MM\full_bin.png')
-        self.front_image = pygame.image.load(r'images\MM\front_bin.png')
+        self.back_image = pygame.image.load(r'images\MM\full_bin.png').convert_alpha()
+        self.front_image = pygame.image.load(r'images\MM\front_bin.png').convert_alpha()
         self.font = pygame.font.SysFont('Arial', 20)
         self.score_text = self.font.render(str(self.score), True, WHITE)
         self.rect = self.back_image.get_rect(center=(center_x, center_y))
@@ -315,7 +315,7 @@ class MMGarbage:
     HOME_POS = (240, MINIGAME_HEIGHT*0.41)
 
     def __init__(self, delete_garbage, walls):
-        self.image = pygame.image.load(r'images\MM\garbage.png')
+        self.image = pygame.image.load(r'images\MM\garbage.png').convert_alpha()
 
         self.velocity = pygame.math.Vector2()
         self.pos = pygame.math.Vector2(MMGarbage.HOME_POS)
@@ -410,7 +410,7 @@ class DDBlock:
         self.tile_size = 50
         self.grid_rect = grid_rect
         self.home_pos = (center_x, center_y)
-        self.tile_image = pygame.image.load(f'images/DD/{colour}.png')
+        self.tile_image = pygame.image.load(f'images/DD/{colour}.png').convert_alpha()
         self.normalise_coordinates(coordinates)
 
         no_tiles_wide = len(set(coord[0] for coord in self.coordinates))
@@ -643,9 +643,9 @@ class UAButton(Image):
 class BFArrow:
     def __init__(self, pos, direction, globabl_info_bar):
         self.global_info_bar = globabl_info_bar
-        self.image = pygame.image.load(rf'images/BF/{direction}.png')
+        self.image = pygame.image.load(rf'images/BF/{direction}.png').convert_alpha()
         self.highlighted_image = pygame.image.load(
-            rf'images/BF/highlighted/{direction}.png')
+            rf'images/BF/highlighted/{direction}.png').convert_alpha()
         self.rect = self.image.get_rect(center=pos)
         self.pressed = False
         self.highlighted = False
@@ -680,8 +680,8 @@ class CSOuter:
     def __init__(self, center, image_name):
         self.center = center
         self.angle = 0
-        self.initial_image = pygame.image.load(image_name)
-        self.image = pygame.image.load(image_name)
+        self.initial_image = pygame.image.load(image_name).convert_alpha()
+        self.image = pygame.image.load(image_name).convert_alpha()
         self.rect = self.image.get_rect(center=self.center)
 
     def rotate_image_to(self, angle):

@@ -1401,7 +1401,7 @@ class DataCompression(MiniGame):
     def setup_images(self):
         self.colours = ['blue', 'green', 'pink', 'purple', 'red', 'yellow']
         self.surfaces = {colour: pygame.image.load(
-            f'images/DC/{colour}.png') for colour in self.colours}
+            f'images/DC/{colour}.png').convert_alpha() for colour in self.colours}
         self.colours = cycle(self.colours)
 
     def draw(self, screen: pygame.Surface):
