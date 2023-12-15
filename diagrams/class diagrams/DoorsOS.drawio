@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-12-14T22:55:39.538Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" etag="CdeK4wdYEfdmnTUISSfS" version="22.1.9" type="onedrive">
+<mxfile host="app.diagrams.net" modified="2023-12-15T22:03:23.917Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" etag="DQaTBOSZ8ZYgjvmBhky1" version="22.1.9" type="onedrive">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
     <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
@@ -278,6 +278,9 @@
         </mxCell>
         <mxCell id="tVtpj592pyamEEXmdhVW-87" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=default;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;endArrow=block;endFill=1;endSize=24;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="tVtpj592pyamEEXmdhVW-65" target="tVtpj592pyamEEXmdhVW-54">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nEhqV31PRx_AkVHk5LO8-0" value="&lt;font style=&quot;font-size: 18px;&quot; color=&quot;#ff0000&quot;&gt;Work in progress class diagram, not sure how the attributes and methods are going to fit&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="810" y="670" width="270" height="140" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
