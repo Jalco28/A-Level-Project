@@ -1,13 +1,13 @@
+import requests
+from utils import *
+from constants import *
+import minigames
+import time
+import pygame
+import random
+import os
 import sys
 sys.dont_write_bytecode = True
-import os
-import random
-import pygame
-import time
-import minigames
-from constants import *
-from utils import *
-import requests
 
 
 class InfoBar:
@@ -83,6 +83,9 @@ class InfoBar:
 
     def change_difficulty_level(self, delta):
         self.difficulty_level += delta
+
+    def add_pause_interval(self, paused_interval):
+        self.paused_intervals.append(paused_interval)
 
     def click(self, x, y):
         pass
@@ -193,7 +196,7 @@ class TaskList:
             SCREEN_WIDTH*0.715, SCREEN_HEIGHT*0.13, SCREEN_WIDTH*0.2, SCREEN_HEIGHT * 0.85+1)
         self.tasks: list[Task] = []
         self.clicks_to_handle = []
-        if DEBUG or main_menu.game.mode == ZEN_MODE:
+        if DEBUG or main_menu.get_game().get_mode() == ZEN_MODE:
             for task in Task.TASK_DESCRIPTIONS:
                 self.add_task(task)
         self.add_task()
@@ -253,7 +256,7 @@ class TaskList:
             self.tasks.append(Task(len(self.tasks), self, description))
 
     def remove_task(self, index):
-        if DEBUG or main_menu.game.mode == ZEN_MODE:
+        if DEBUG or main_menu.get_game().get_mode() == ZEN_MODE:
             return
         self.tasks.pop(index)
         for idx, task in enumerate(self.tasks):
@@ -308,15 +311,15 @@ class Task:
         else:
             self.description = description
         self.clicks_to_handle = []
-        self.priority = random.choice([1]*2+\
-                                      [2]*4+\
-                                      [3]*4+\
-                                      [4]*5+\
-                                      [5]*8+\
-                                      [6]*6+\
-                                      [7]*4+\
-                                      [8]*2+\
-                                      [9]*1+\
+        self.priority = random.choice([1]*2 +
+                                      [2]*4 +
+                                      [3]*4 +
+                                      [4]*5 +
+                                      [5]*8 +
+                                      [6]*6 +
+                                      [7]*4 +
+                                      [8]*2 +
+                                      [9]*1 +
                                       [10]*1)
 
         self.time_required = random.randint(
@@ -338,8 +341,9 @@ class Task:
         return self.priority
 
     def play_button_action(self):
-        if isinstance(main_menu.game.current_mini_game, minigames.EmptyMiniGame):
-            main_menu.game.change_minigame(Task.TASK_OBJECTS[self.description])
+        if isinstance(main_menu.get_game().get_minigame(), minigames.EmptyMiniGame):
+            main_menu.get_game().change_minigame(
+                Task.TASK_OBJECTS[self.description])
             self.parent.remove_task(self.index)
 
     def draw(self, screen: pygame.Surface):
@@ -510,6 +514,9 @@ class MainMenu:
             if panel.rect.collidepoint(x, y):
                 panel.click(x, y)
 
+    def get_game(self):
+        return self.game
+
 
 class DoorsOS:
     def __init__(self, clock, screen, difficulty, mode):
@@ -560,7 +567,8 @@ class DoorsOS:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         paused_interval = self.pause_game()
-                        self.info_bar.paused_intervals.append(paused_interval)
+                        # self.info_bar.paused_intervals.append(paused_interval)
+                        self.info_bar.add_pause_interval(paused_interval)
 
             if not self.game_running:
                 break
@@ -719,6 +727,12 @@ class DoorsOS:
 
     def unpause_game(self):
         self.paused = False
+
+    def get_mode(self):
+        return self.mode
+
+    def get_minigame(self):
+        return self.current_mini_game
 
 
 class LearningMode:

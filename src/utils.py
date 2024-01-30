@@ -39,6 +39,8 @@ class Button:
     def click(self, *args, **kwargs):
         self.action()
 
+    def get_rect(self):
+        return self.rect
 
 class ToggleButton(Button):
     def __init__(self, text, center_x, center_y, border_colour, background_colour, active_background_colour, font_size, active, action=None):
@@ -138,6 +140,12 @@ class STTInfoBar:  # Score, target, time, info bar
         screen.blit(target_text, self.target_rect)
         screen.blit(time_text, self.time_rect)
 
+    def get_target(self):
+        return self.target
+    def get_score(self):
+        return self.score
+    def get_rect(self):
+        return self.rect
 
 class TimeInfoBar:
     def __init__(self, time_allowed, global_info_bar):
@@ -197,6 +205,9 @@ class TimeInfoBar:
     def set_custom_field_value(self, name, value):
         old_tuple = self.custom_fields[name]
         self.custom_fields[name] = (value, old_tuple[1], old_tuple[2])
+
+    def get_rect(self):
+        return self.rect
 
 
 class RMIButton:
@@ -279,6 +290,9 @@ class RMIButton:
         if self.has_been_on_screen and not self.rect.colliderect(self.screen_rect):
             self.delete_button(self.ID)
 
+    def get_rect(self):
+        return self.rect
+
 
 class MMBin:
     def __init__(self, center_x, center_y, score):
@@ -308,6 +322,9 @@ class MMBin:
             #                     self.rect.topright])
             pygame.draw.line(screen, RED, (self.back_wall_edge,
                              MINIGAME_HEIGHT), (self.back_wall_edge, 0))
+    def get_back_wall_edge(self):
+        return self.back_wall_edge
+
 
 
 class MMGarbage:
@@ -385,7 +402,12 @@ class MMGarbage:
         else:
             self.pos = pygame.math.Vector2(MMGarbage.HOME_POS)
             return False
-
+    def get_rect(self):
+        return self.rect
+    def grab(self):
+        self.grabbed = True
+    def get_grabbed(self):
+        return self.grabbed
 
 class MMWall:
     def __init__(self, left):
@@ -468,21 +490,6 @@ class DDBlock:
             else:
                 return
 
-        # passed_rects = 0
-        # for rect in self.collision_rects:
-        #     for grid_center in DD_TILE_CENTERS:
-        #         if tuple_pythag(tuple_addition((-rect.centerx, -rect.centery), grid_center)) <= 25:
-        #             passed_rects += 1
-        #             if snap_delta is None:
-        #                 snap_delta = tuple_addition(
-        #                     (-rect.centerx, -rect.centery), grid_center)
-        #             break
-        # if passed_rects != len(self.collision_rects):
-        #     if self.grid_rect.colliderect(self.rect):
-        #         return self.go_home()
-        #     else:
-        #         return
-
         # Check grid occupation
         potential_occupations = set()
         for tile in self.collision_rects:
@@ -517,6 +524,11 @@ class DDBlock:
         self.rect.center = (x, y)
         self.setup_collision_rects()
 
+    def get_grabbed(self):
+        return self.grabbed
+    def grab(self):
+        self.grabbed = True
+
 
 class ODNode:
     RADIUS = 15
@@ -539,6 +551,15 @@ class ODNode:
     def randomise_position(self):
         self.pos = (random.randint(round(0.2*MINIGAME_WIDTH), round(0.8*MINIGAME_WIDTH)),
                     random.randint(round(0.2*MINIGAME_HEIGHT), round(0.8*MINIGAME_HEIGHT)))
+    def get_pos(self):
+        return self.pos
+
+    def get_grabbed(self):
+        return self.grabbed
+    def ungrab(self):
+        self.grabbed = False
+    def grab(self):
+        self.grabbed = True
 
 
 class UAPassword:
@@ -571,7 +592,8 @@ class UAPassword:
                 self.text_rect.center = self.rect.center
                 if location == self.hashinator_input_location:
                     return True
-
+    def get_rect(self):
+        return self.rect
 
 class UARequest:
     def __init__(self, username, password, failed_attempts, correct_repsonse):
@@ -638,6 +660,8 @@ class UAButton(Image):
             else:
                 self.highlighted = False
         screen.blit(self.image, self.rect)
+    def get_rect(self):
+        return self.rect
 
 
 class BFArrow:
@@ -674,6 +698,12 @@ class BFArrow:
                 screen.blit(self.highlighted_image, self.rect)
             else:
                 screen.blit(self.image, self.rect)
+
+    def append_highlight(self, value):
+        self.scheduled_highlights.append(value)
+
+    def set_pressed(self, value):
+        self.pressed = value
 
 
 class CSOuter:
@@ -840,6 +870,9 @@ class DCBlock:
                 return False
         return True
 
+    def get_solid(self):
+        return self.solid
+
 
 class LeaderBoard:
     VERTICAL_LINES = [SCREEN_WIDTH *
@@ -871,7 +904,7 @@ class LeaderBoard:
         self.download_data()
         self.update_rows()
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
         for line in LeaderBoard.VERTICAL_LINES:
             pygame.draw.line(screen, BLACK, (line, self.rect.top),

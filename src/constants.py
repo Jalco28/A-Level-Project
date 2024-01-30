@@ -61,7 +61,8 @@ UA_PASSWORDS = ['password',
                 'k6e^DJA',
                 'BaTmaN',
                 'iluvdogs',
-                'x@6a8qDU']
+                'x@6a8qDU',
+                'hash_brown']
 UA_TICK = 0
 UA_CROSS = 1
 UA_LOCK = 2

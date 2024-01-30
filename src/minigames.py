@@ -54,20 +54,20 @@ class MiniGame:
     def check_forfeit_buttons_clicked(self, x, y):
         click_used = False
         if self.questioning_forfeit:
-            if self.confirm_forfeit_button.rect.collidepoint(x, y):
+            if self.confirm_forfeit_button.get_rect().collidepoint(x, y):
                 self.confirm_forfeit_button.click()
                 click_used = True
-            elif self.cancel_forfeit_button.rect.collidepoint(x, y):
+            elif self.cancel_forfeit_button.get_rect().collidepoint(x, y):
                 self.cancel_forfeit_button.click()
                 click_used = True
         else:
-            if self.forfeit_button.rect.collidepoint(x, y):
+            if self.forfeit_button.get_rect().collidepoint(x, y):
                 self.forfeit_button.click()
                 click_used = True
         return click_used
 
     def check_info_bar_clicked(self, x, y):
-        return self.info_bar.rect.collidepoint(x, y)
+        return self.info_bar.get_rect().collidepoint(x, y)
 
     def common_drawing(self, screen: pygame.Surface):
         self.draw_forfeit_button()
@@ -109,7 +109,7 @@ class MiniGame:
         screen.blit(self.sub_surface, self.rect)
 
     def check_time_and_target(self):
-        if self.info_bar.target <= self.info_bar.score:
+        if self.info_bar.get_target() <= self.info_bar.get_score():
             self.running = False
             self.success = True
             self.ending_message = self.font.render(
@@ -214,7 +214,7 @@ class RegisterMouseInputs(MiniGame):
 
             # Check clicks in reverse draw order
             for button in reversed(self.buttons.values()):
-                if button.rect.collidepoint(x, y):
+                if button.get_rect().collidepoint(x, y):
                     button.click()
                     click_used = True
                     break
@@ -315,8 +315,8 @@ class MemoryManagement(MiniGame):
                 continue
 
             try:
-                if self.catapult_garbage.rect.collidepoint(x, y):
-                    self.catapult_garbage.grabbed = True
+                if self.catapult_garbage.get_rect().collidepoint(x, y):
+                    self.catapult_garbage.grab()
                     click_used = True
             except KeyError:  # No garbage in catapult as player has run out
                 pass
@@ -357,7 +357,7 @@ class MemoryManagement(MiniGame):
     def delete_garbage(self, ID):
         garbage = self.garbage_dict[ID]
         for bin in self.bins:
-            if abs(garbage.rect.right - bin.back_wall_edge) <= 5:
+            if abs(garbage.get_rect().right - bin.get_back_wall_edge()) <= 5:
                 self.info_bar.add_score(bin.score)
                 if DEBUG:
                     bin.highlight_start_time = time.time()
@@ -368,20 +368,20 @@ class MemoryManagement(MiniGame):
 
     def setup_walls(self):
         self.walls: list[MMWall] = [
-            MMWall(self.bins[0].back_wall_edge),
-            MMWall(self.bins[1].back_wall_edge),
-            MMWall(self.bins[2].back_wall_edge),
-            MMWall(self.bins[3].back_wall_edge),
-            MMWall(self.bins[4].back_wall_edge),
-            MMWall(self.bins[5].back_wall_edge),
-            MMWall(self.bins[6].back_wall_edge),
-            MMWall(self.bins[7].back_wall_edge)
+            MMWall(self.bins[0].get_back_wall_edge()),
+            MMWall(self.bins[1].get_back_wall_edge()),
+            MMWall(self.bins[2].get_back_wall_edge()),
+            MMWall(self.bins[3].get_back_wall_edge()),
+            MMWall(self.bins[4].get_back_wall_edge()),
+            MMWall(self.bins[5].get_back_wall_edge()),
+            MMWall(self.bins[6].get_back_wall_edge()),
+            MMWall(self.bins[7].get_back_wall_edge())
         ]
 
     def take_event(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEMOTION:
             try:
-                if self.catapult_garbage.grabbed:
+                if self.catapult_garbage.get_grabbed():
                     self.catapult_garbage.drag(
                         *MiniGame.translate_coords(*event.pos))
             except KeyError:  # No garbage in catapult as player has run out
@@ -390,7 +390,7 @@ class MemoryManagement(MiniGame):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 try:
-                    if self.catapult_garbage.grabbed:
+                    if self.catapult_garbage.get_grabbed():
                         garbage_thrown = self.catapult_garbage.throw()
                         if garbage_thrown:
                             self.add_garbage()
@@ -408,8 +408,8 @@ class DefragDisk(MiniGame):
         self.grid_rect = pygame.Rect(self.sub_rect.centerx-(grid_size/2),
                                      self.sub_rect.centery-(grid_size/2), grid_size, grid_size)
         self.info_bar = TimeInfoBar(120, global_info_bar)
-        self.reset_button = Button('Reset blocks', self.info_bar.rect.centerx +
-                                   350, self.info_bar.rect.centery, BLACK, WHITE, 30, self.reset_blocks)
+        self.reset_button = Button('Reset blocks', self.info_bar.get_rect().centerx +
+                                   350, self.info_bar.get_rect().centery, BLACK, WHITE, 30, self.reset_blocks)
         self.setup_blocks()
 
     def draw(self, screen: pygame.Surface):
@@ -443,7 +443,7 @@ class DefragDisk(MiniGame):
             x, y = self.clicks_to_handle.pop(0)
             click_used = False
 
-            if self.reset_button.rect.collidepoint(x, y):
+            if self.reset_button.get_rect().collidepoint(x, y):
                 self.reset_button.click()
                 click_used = True
             if click_used:
@@ -459,7 +459,7 @@ class DefragDisk(MiniGame):
                     # Move block to end of list
                     self.blocks.append(self.blocks.pop(
                         self.blocks.index(block)))
-                    block.grabbed = True
+                    block.grab()
                     self.occupied_tiles.difference_update(
                         block.occupied_tiles())
                     click_used = True
@@ -549,13 +549,13 @@ class DefragDisk(MiniGame):
     def take_event(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEMOTION:
             for block in self.blocks:
-                if block.grabbed:
+                if block.get_grabbed():
                     block.drag(event.rel)
 
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 for block in self.blocks:
-                    if block.grabbed:
+                    if block.get_grabbed():
                         newly_occupied_tiles = block.ungrab(
                             self.occupied_tiles)
                         if newly_occupied_tiles is not None:
@@ -651,14 +651,14 @@ class OrganiseDrivers(MiniGame):
 
             for connection in self.connections:
                 pygame.draw.aaline(self.sub_surface, RED,
-                                   self.nodes[connection[0]].pos, self.nodes[connection[1]].pos)
+                                   self.nodes[connection[0]].get_pos(), self.nodes[connection[1]].get_pos())
 
             for intersection in self.intersections:
                 pygame.draw.circle(self.sub_surface, BLUE, intersection, 5)
         else:
             for connection in self.connections:
                 pygame.draw.aaline(self.sub_surface, BLACK,
-                                   self.nodes[connection[0]].pos, self.nodes[connection[1]].pos)
+                                   self.nodes[connection[0]].get_pos(), self.nodes[connection[1]].get_pos())
 
             for node in self.nodes:
                 node.draw(self.sub_surface, len(self.intersections) == 0)
@@ -673,7 +673,7 @@ class OrganiseDrivers(MiniGame):
         self.intersections = []
         for connection_pair in combinations(self.connections, 2):
             intersect = self.check_line_intersection(
-                self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
+                self.nodes[connection_pair[0][0]].get_pos(), self.nodes[connection_pair[0][1]].get_pos(), self.nodes[connection_pair[1][0]].get_pos(), self.nodes[connection_pair[1][1]].get_pos())
             if intersect:
                 self.intersections.append(intersect)
 
@@ -690,10 +690,10 @@ class OrganiseDrivers(MiniGame):
                 continue
 
             for node in reversed(copy(self.nodes)):  # Check in reverse draw order
-                if tuple_pythag(tuple_addition((-x, -y), node.pos)) <= ODNode.RADIUS:
+                if tuple_pythag(tuple_addition((-x, -y), node.get_pos())) <= ODNode.RADIUS:
                     # Move node to end of list
                     # self.nodes.append(self.nodes.pop(self.nodes.index(node)))
-                    node.grabbed = True
+                    node.grab()
                     click_used = True
                     break
             if click_used:
@@ -738,7 +738,7 @@ class OrganiseDrivers(MiniGame):
             casues_intersections = False
             for connection_pair in combinations(self.connections+[new_connection], 2):
                 intersect = self.check_line_intersection(
-                    self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
+                    self.nodes[connection_pair[0][0]].get_pos(), self.nodes[connection_pair[0][1]].get_pos(), self.nodes[connection_pair[1][0]].get_pos(), self.nodes[connection_pair[1][1]].get_pos())
                 if intersect:
                     casues_intersections = True
 
@@ -767,7 +767,7 @@ class OrganiseDrivers(MiniGame):
                 casues_intersections = False
                 for connection_pair in combinations(self.connections+[new_connection], 2):
                     intersect = self.check_line_intersection(
-                        self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
+                        self.nodes[connection_pair[0][0]].get_pos(), self.nodes[connection_pair[0][1]].get_pos(), self.nodes[connection_pair[1][0]].get_pos(), self.nodes[connection_pair[1][1]].get_pos())
                     if intersect:
                         casues_intersections = True
 
@@ -787,7 +787,7 @@ class OrganiseDrivers(MiniGame):
         num_intersections = 0
         for connection_pair in combinations(self.connections, 2):
             intersect = self.check_line_intersection(
-                self.nodes[connection_pair[0][0]].pos, self.nodes[connection_pair[0][1]].pos, self.nodes[connection_pair[1][0]].pos, self.nodes[connection_pair[1][1]].pos)
+                self.nodes[connection_pair[0][0]].get_pos(), self.nodes[connection_pair[0][1]].get_pos(), self.nodes[connection_pair[1][0]].get_pos(), self.nodes[connection_pair[1][1]].get_pos())
             if intersect:
                 num_intersections += 1
         return num_intersections
@@ -795,12 +795,12 @@ class OrganiseDrivers(MiniGame):
     def take_event(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEMOTION:
             for node in self.nodes:
-                if node.grabbed:
+                if node.get_grabbed():
                     node.drag(event.rel)
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 for node in self.nodes:
-                    node.grabbed = False
+                    node.ungrab()
                 if len(self.intersections) == 0:
                     self.success = True
                     self.running = False
@@ -1009,7 +1009,7 @@ class UserAuthentication(MiniGame):
             if click_used:
                 continue
 
-            if self.request.password.rect.collidepoint(x, y):
+            if self.request.password.get_rect().collidepoint(x, y):
                 self.request.password.grabbed = True
                 self.hide_hashinator_output()
                 click_used = True
@@ -1017,7 +1017,7 @@ class UserAuthentication(MiniGame):
                 continue
 
             for button in self.buttons:
-                if not click_used and button.rect.collidepoint(x, y):
+                if not click_used and button.get_rect().collidepoint(x, y):
                     button.action()
                     click_used = True
             if click_used:
@@ -1117,16 +1117,16 @@ class BackupFiles(MiniGame):
             buttons = self.sequence[i]
             for button in buttons:
                 if button == 'u':
-                    self.up.scheduled_highlights.append(
+                    self.up.append_highlight(
                         (start_time+i*button_duration, (start_time+i*button_duration)+highlight_duration))
                 elif button == 'l':
-                    self.left.scheduled_highlights.append(
+                    self.left.append_highlight(
                         (start_time+i*button_duration, (start_time+i*button_duration)+highlight_duration))
                 elif button == 'd':
-                    self.down.scheduled_highlights.append(
+                    self.down.append_highlight(
                         (start_time+i*button_duration, (start_time+i*button_duration)+highlight_duration))
                 elif button == 'r':
-                    self.right.scheduled_highlights.append(
+                    self.right.append_highlight(
                         (start_time+i*button_duration, (start_time+i*button_duration)+highlight_duration))
 
     def draw(self, screen: pygame.Surface):
@@ -1192,35 +1192,35 @@ class BackupFiles(MiniGame):
         if event.type == pygame.KEYDOWN:
             if self.current_phase == BF_COPY:
                 if event.key == pygame.K_a:
-                    self.left.pressed = True
+                    self.left.set_pressed(True)
                     self.keys_previously_pressed.add('l')
                     self.keys_currently_pressed.add('l')
                 elif event.key == pygame.K_d:
-                    self.right.pressed = True
+                    self.right.set_pressed(True)
                     self.keys_previously_pressed.add('r')
                     self.keys_currently_pressed.add('r')
                 elif event.key == pygame.K_s:
-                    self.down.pressed = True
+                    self.down.set_pressed(True)
                     self.keys_previously_pressed.add('d')
                     self.keys_currently_pressed.add('d')
                 elif event.key == pygame.K_w:
-                    self.up.pressed = True
+                    self.up.set_pressed(True)
                     self.keys_previously_pressed.add('u')
                     self.keys_currently_pressed.add('u')
 
         if event.type == pygame.KEYUP:
             if self.current_phase == BF_COPY:
                 if event.key == pygame.K_a:
-                    self.left.pressed = False
+                    self.left.set_pressed(False)
                     self.keys_currently_pressed.discard('l')
                 elif event.key == pygame.K_d:
-                    self.right.pressed = False
+                    self.right.set_pressed(False)
                     self.keys_currently_pressed.discard('r')
                 elif event.key == pygame.K_s:
-                    self.down.pressed = False
+                    self.down.set_pressed(False)
                     self.keys_currently_pressed.discard('d')
                 elif event.key == pygame.K_w:
-                    self.up.pressed = False
+                    self.up.set_pressed(False)
                     self.keys_currently_pressed.discard('u')
 
 
@@ -1421,7 +1421,7 @@ class DataCompression(MiniGame):
         if not DEBUG:
             self.check_time()
 
-        if self.block.solid:
+        if self.block.get_solid():
             colour = self.block.get_colour()
             for coord in self.block.get_grid_coords():
                 self.blocked_slots[coord] = colour
