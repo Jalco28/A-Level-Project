@@ -47,7 +47,7 @@ class Row(tk.Frame):
         ]
         if not top_row:
             self.widgets.append(tk.Button(
-                self.frames[6], text='Delete all instances of username', command=partial(delete_name, data['username'])))
+                self.frames[6], text='Delete entries of submitted username', command=partial(delete_name, data['username'])))
         for i in range(7):
             self.columnconfigure(i, minsize=(ROOT_WIDTH-10)/7)
             try:
@@ -157,7 +157,7 @@ auto_refresh_tickbox.grid(row=0, column=0)
 refresh_button.grid(row=0, column=1)
 refresh_frame.grid(row=0, column=2)
 
-difficulty_label = tk.Label(top_frame, text='Time Period:')
+difficulty_label = tk.Label(top_frame, text='Difficulty:')
 difficulty_label.grid(row=0, column=3, sticky='E')
 difficulty_strvar = tk.StringVar(top_frame)
 difficulties = ['All',

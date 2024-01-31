@@ -389,13 +389,13 @@ class MainMenu:
         self.clock = pygame.time.Clock()
 
         self.play_button = Button(
-            'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.4, BLACK, GREY, 50, self.choose_difficulty)
+            'Play game', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.35, BLACK, GREY, 50, self.choose_difficulty)
         self.leaderboard_button = Button(
-            'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.5, BLACK, GREY, 50, self.leaderboard)
+            'Leaderboard', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.45, BLACK, GREY, 50, self.leaderboard)
         self.learning_button = Button(
-            'Learning Mode', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.6, BLACK, GREY, 50, self.learning_mode)
+            'Learning Mode / How to Play', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.55, BLACK, GREY, 50, self.learning_mode)
         self.exit_button = Button(
-            'Exit to desktop', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.7, BLACK, GREY, 50, self.menu_running_false)
+            'Exit to desktop', SCREEN_WIDTH*0.5, SCREEN_HEIGHT*0.65, BLACK, GREY, 50, self.menu_running_false)
 
         self.regular_button = ToggleButton(
             'Regular play', SCREEN_WIDTH*0.42, SCREEN_HEIGHT*0.35, BLACK, GREY, GREEN, 50, True)

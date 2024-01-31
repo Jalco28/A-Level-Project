@@ -42,6 +42,7 @@ class Button:
     def get_rect(self):
         return self.rect
 
+
 class ToggleButton(Button):
     def __init__(self, text, center_x, center_y, border_colour, background_colour, active_background_colour, font_size, active, action=None):
         super().__init__(text, center_x, center_y,
@@ -142,10 +143,13 @@ class STTInfoBar:  # Score, target, time, info bar
 
     def get_target(self):
         return self.target
+
     def get_score(self):
         return self.score
+
     def get_rect(self):
         return self.rect
+
 
 class TimeInfoBar:
     def __init__(self, time_allowed, global_info_bar):
@@ -297,8 +301,10 @@ class RMIButton:
 class MMBin:
     def __init__(self, center_x, center_y, score):
         self.score = score
-        self.back_image = pygame.image.load(r'images\MM\full_bin.png').convert_alpha()
-        self.front_image = pygame.image.load(r'images\MM\front_bin.png').convert_alpha()
+        self.back_image = pygame.image.load(
+            r'images\MM\full_bin.png').convert_alpha()
+        self.front_image = pygame.image.load(
+            r'images\MM\front_bin.png').convert_alpha()
         self.font = pygame.font.SysFont('Arial', 20)
         self.score_text = self.font.render(str(self.score), True, WHITE)
         self.rect = self.back_image.get_rect(center=(center_x, center_y))
@@ -322,9 +328,9 @@ class MMBin:
             #                     self.rect.topright])
             pygame.draw.line(screen, RED, (self.back_wall_edge,
                              MINIGAME_HEIGHT), (self.back_wall_edge, 0))
+
     def get_back_wall_edge(self):
         return self.back_wall_edge
-
 
 
 class MMGarbage:
@@ -332,7 +338,8 @@ class MMGarbage:
     HOME_POS = (240, MINIGAME_HEIGHT*0.41)
 
     def __init__(self, delete_garbage, walls):
-        self.image = pygame.image.load(r'images\MM\garbage.png').convert_alpha()
+        self.image = pygame.image.load(
+            r'images\MM\garbage.png').convert_alpha()
 
         self.velocity = pygame.math.Vector2()
         self.pos = pygame.math.Vector2(MMGarbage.HOME_POS)
@@ -402,12 +409,16 @@ class MMGarbage:
         else:
             self.pos = pygame.math.Vector2(MMGarbage.HOME_POS)
             return False
+
     def get_rect(self):
         return self.rect
+
     def grab(self):
         self.grabbed = True
+
     def get_grabbed(self):
         return self.grabbed
+
 
 class MMWall:
     def __init__(self, left):
@@ -432,7 +443,8 @@ class DDBlock:
         self.tile_size = 50
         self.grid_rect = grid_rect
         self.home_pos = (center_x, center_y)
-        self.tile_image = pygame.image.load(f'images/DD/{colour}.png').convert_alpha()
+        self.tile_image = pygame.image.load(
+            f'images/DD/{colour}.png').convert_alpha()
         self.normalise_coordinates(coordinates)
 
         no_tiles_wide = len(set(coord[0] for coord in self.coordinates))
@@ -526,6 +538,7 @@ class DDBlock:
 
     def get_grabbed(self):
         return self.grabbed
+
     def grab(self):
         self.grabbed = True
 
@@ -551,13 +564,16 @@ class ODNode:
     def randomise_position(self):
         self.pos = (random.randint(round(0.2*MINIGAME_WIDTH), round(0.8*MINIGAME_WIDTH)),
                     random.randint(round(0.2*MINIGAME_HEIGHT), round(0.8*MINIGAME_HEIGHT)))
+
     def get_pos(self):
         return self.pos
 
     def get_grabbed(self):
         return self.grabbed
+
     def ungrab(self):
         self.grabbed = False
+
     def grab(self):
         self.grabbed = True
 
@@ -592,8 +608,10 @@ class UAPassword:
                 self.text_rect.center = self.rect.center
                 if location == self.hashinator_input_location:
                     return True
+
     def get_rect(self):
         return self.rect
+
 
 class UARequest:
     def __init__(self, username, password, failed_attempts, correct_repsonse):
@@ -660,6 +678,7 @@ class UAButton(Image):
             else:
                 self.highlighted = False
         screen.blit(self.image, self.rect)
+
     def get_rect(self):
         return self.rect
 
@@ -667,7 +686,8 @@ class UAButton(Image):
 class BFArrow:
     def __init__(self, pos, direction, globabl_info_bar):
         self.global_info_bar = globabl_info_bar
-        self.image = pygame.image.load(rf'images/BF/{direction}.png').convert_alpha()
+        self.image = pygame.image.load(
+            rf'images/BF/{direction}.png').convert_alpha()
         self.highlighted_image = pygame.image.load(
             rf'images/BF/highlighted/{direction}.png').convert_alpha()
         self.rect = self.image.get_rect(center=pos)
@@ -906,6 +926,7 @@ class LeaderBoard:
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, GREY, self.rect)
+        pygame.draw.rect(screen, BLACK, self.rect, 1)
         for line in LeaderBoard.VERTICAL_LINES:
             pygame.draw.line(screen, BLACK, (line, self.rect.top),
                              (line, self.rect.bottom))
@@ -928,7 +949,7 @@ class LeaderBoard:
 
     def download_data(self):
         r = requests.get('http://140.238.101.107/doorsos/read.php')
-        self.all_data = json.loads(r.text)
+        self.all_data = r.json()
 
     def matches_filters(self, data):
         if data['difficulty'] != self.difficulty and self.difficulty != 'All':
@@ -963,6 +984,9 @@ class LeaderBoard:
         filtered_data.sort(key=lambda x: x['score'], reverse=True)
         self.rows = [LeaderBoardRow((self.rect.left, self.rect.top+((i+1)*38)), data, i+1)
                      for i, data in enumerate(filtered_data[:20])]
+
+    def click(self, x, y):
+        pass
 
 
 class LeaderBoardRow:
