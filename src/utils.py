@@ -237,7 +237,6 @@ class RMIButton:
             image_name = 'images\RMI\\' + \
                 random.choice(RMIButton.IMAGE_NAMES) + '.png'
         self.image = pygame.image.load(image_name).convert_alpha()
-        # self.image = pygame.transform.smoothscale(self.image, (100, 100))
         self.speed = random.uniform(1.8, 3.7)
 
         # Pick random point on perimiter and push offscreen
@@ -280,7 +279,7 @@ class RMIButton:
         screen.blit(self.image, self.rect)
 
     def click(self):
-        # Action will be function in RMI class that accepts ID of an RMIButton and deals with its click
+        # Action is a function in RMI class that accepts ID of an RMIButton and deals with its click
         self.action(self.ID)
 
     def update(self):
@@ -321,11 +320,6 @@ class MMBin:
         screen.blit(self.front_image, self.rect)
         screen.blit(self.score_text, (self.rect.centerx-8, self.rect.top+20))
         if DEBUG:
-            # pygame.draw.aalines(screen, RED, False, [
-            #                     self.rect.topleft,
-            #                     self.rect.bottomleft,
-            #                     self.rect.bottomright,
-            #                     self.rect.topright])
             pygame.draw.line(screen, RED, (self.back_wall_edge,
                              MINIGAME_HEIGHT), (self.back_wall_edge, 0))
 
@@ -783,12 +777,9 @@ class DCBlock:
 
     def draw(self, screen: pygame.Surface):
         self.update_rect()
-        # pygame.draw.rect(screen, BLACK, self.rect)
         for tile in self.get_tile_coords():
             screen.blit(self.tile_image, (self.rect.left + self.tile_size *
                         tile[0], self.rect.top + self.tile_size*tile[1]))
-        # if DEBUG:
-        #     pygame.draw.circle(screen, BLACK, self.rect.center, 5)
 
     def update(self, blocked_slots):
         if self.global_info_bar.get_time_elapsed()-self.last_fall_time >= 0.8:
@@ -836,7 +827,6 @@ class DCBlock:
         self.rotation_state %= 4
 
     def move(self, direction, blocked_slots):
-        # self.grid_offset = tuple_addition(self.grid_offset, (-1, 0))
         if direction == 'left':
             potential_coords = [tuple_addition(
                 (-1, 0), coord) for coord in self.get_grid_coords()]

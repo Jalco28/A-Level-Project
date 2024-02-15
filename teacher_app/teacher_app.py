@@ -148,7 +148,6 @@ time_dropdown = ttk.OptionMenu(
 time_dropdown.grid(row=0, column=1, sticky='W')
 
 refresh_frame = tk.Frame(top_frame)
-# auto_refresh_label = tk.Label(refresh_frame, text='Auto Refresh:')
 auto_refresh_var = tk.IntVar(refresh_frame)
 auto_refresh_tickbox = tk.Checkbutton(
     refresh_frame, text='Auto Refresh', variable=auto_refresh_var)

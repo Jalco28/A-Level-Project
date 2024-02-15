@@ -141,8 +141,6 @@ class FrustrationBar:
 
         distance_to_target = self.frustration_level - self.target
         if abs(distance_to_target) <= 1.5:
-            # print(f'Reached Target {self.TEMP}')
-            # self.TEMP += 1
             self.frustration_level = self.target
             if not self.target_reached:
                 self.new_target_time = self.global_info_bar.get_time_elapsed()+1.5
@@ -301,7 +299,7 @@ class Task:
     def __init__(self, index, parent, description):
         self.parent: TaskList = parent
         self.index = index
-        self.HEIGHT = 103  # Apparently odd number so 8 tasks nicely fit into the list
+        self.HEIGHT = 103  # Odd number so 8 tasks nicely fit into the list
         self.rect = pygame.Rect(self.parent.rect.left, self.parent.rect.top + 1 +
                                 self.index*self.HEIGHT, self.parent.rect.width, self.HEIGHT)
         self.description_font = pygame.font.SysFont('Arial', 35)
@@ -567,7 +565,6 @@ class DoorsOS:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         paused_interval = self.pause_game()
-                        # self.info_bar.paused_intervals.append(paused_interval)
                         self.info_bar.add_pause_interval(paused_interval)
 
             if not self.game_running:
@@ -608,10 +605,6 @@ class DoorsOS:
             panel.update()
 
         if self.current_mini_game.ready_to_exit:
-            # if self.current_mini_game.success:
-            #     self.frustration_bar.change_net_mingame_score(10)
-            # else:
-            #     self.frustration_bar.change_net_mingame_score(-10)
             if self.current_mini_game.forfeited:
                 self.frustration_bar.change_tasks_forfeited(1)
             self.change_minigame(minigames.EmptyMiniGame)

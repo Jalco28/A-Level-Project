@@ -604,7 +604,7 @@ class OrganiseDrivers(MiniGame):
                 p3-p1, l2_delta/OrganiseDrivers.cross_product_2d(l1_delta, l2_delta))
             mu = OrganiseDrivers.cross_product_2d(
                 p3-p1, l1_delta/OrganiseDrivers.cross_product_2d(l1_delta, l2_delta))
-        except ZeroDivisionError:  # Seems to happen when collinear
+        except ZeroDivisionError:  # Happens when collinear
             return False
 
         # Lines are collinear
@@ -692,7 +692,6 @@ class OrganiseDrivers(MiniGame):
             for node in reversed(copy(self.nodes)):  # Check in reverse draw order
                 if tuple_pythag(tuple_addition((-x, -y), node.get_pos())) <= ODNode.RADIUS:
                     # Move node to end of list
-                    # self.nodes.append(self.nodes.pop(self.nodes.index(node)))
                     node.grab()
                     click_used = True
                     break
@@ -1096,10 +1095,6 @@ class BackupFiles(MiniGame):
             if random.randint(1, 100) <= 15:  # 15% chance
                 new.pop(random.randint(0, 1))
             self.sequence.append(''.join(sorted(reduce(operator.add, new))))
-        # for i in range(2):
-        #     new = copy(buttons)
-        #     new.pop(random.randint(0, 3))
-        #     self.sequence.append(''.join(sorted(reduce(operator.add, new))))
 
     def set_dot_colour(self, index, colour):
         self.dots[index] = (self.dots[index][0], colour)
