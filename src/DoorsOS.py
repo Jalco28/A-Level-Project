@@ -1,3 +1,5 @@
+import sys
+sys.dont_write_bytecode = True
 import requests
 from utils import *
 from constants import *
@@ -6,8 +8,6 @@ import time
 import pygame
 import random
 import os
-import sys
-sys.dont_write_bytecode = True
 
 
 class InfoBar:
